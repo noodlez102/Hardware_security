@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
                i, bw, threshold, bit);
         fflush(stdout);
 
-        //sleep_until(window_end);
+        sleep_until(window_end);
     }
     received[num_bits] = '\0';
 
