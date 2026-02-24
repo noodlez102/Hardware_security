@@ -172,11 +172,11 @@ static double run_simple_stream()
             break;
         }
 
-        // if (until > 0.0 && now() >= until) {
-        //     kill(pid, SIGKILL);
-        //     waitpid(pid, NULL, 0);
-        //     break;
-        // }
+        if (until > 0.0 && now() >= until) {
+            kill(pid, SIGKILL);
+            waitpid(pid, NULL, 0);
+            break;
+        }
 
         char    tmp[4096];
         ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
