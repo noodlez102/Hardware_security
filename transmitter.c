@@ -136,19 +136,23 @@ int main(int argc, char *argv[])
     printf("transmitter: sending %zu bits, %.1fs per bit\n\n", strlen(bits), BIT_DURATION);
     fflush(stdout);
 
-    sleep_until(start_time);
+    // sleep_until(start_time);
 
     for (size_t i = 0; i < strlen(bits); i++) {
-        char   bit      = bits[i];
-        double bit_end  = start_time + (i + 1) * BIT_DURATION;
+        char   bit     = bits[i];
+        double bit_start = start_time + i * BIT_DURATION;
+        double bit_end   = start_time + (i + 1) * BIT_DURATION;
 
-        printf("transmitter: bit %zu = '%c' -> %s at time = %.3f\n", i, bit, bit == '1' ? "hammering memory" : "sleeping", now());
-        fflush(stdout);
+        sleep_until(bit_start); 
 
         if (bit == '1')
-            hammer_memory(bit_end);
+            hammer_memory(bit_end); 
         else
             sleep_until(bit_end);
+
+        printf("transmitter: bit %zu = '%c' -> %s at time = %.3f\n",
+            i, bit, bit == '1' ? "hammered" : "slept", bit_start);
+        fflush(stdout);
     }
 
     remove(SYNC_FILE);
