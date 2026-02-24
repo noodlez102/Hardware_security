@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 
     printf("receiver: calibrating baseline (transmitter not yet active)...\n");
     fflush(stdout);
-    double baseline = run_simple_stream(now()+5);
+    double baseline = run_simple_stream(now());
     if (threshold <= 0.0) {
         threshold = baseline * 0.94;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
