@@ -175,14 +175,17 @@ int main(int argc, char *argv[])
     printf("transmitter: sending %zu bits, %.1fs per bit\n\n", strlen(bits), BIT_DURATION);
     fflush(stdout);
 
-    // sleep_until(start_time);
 
     for (size_t i = 0; i < strlen(bits); i++) {
         char   bit     = bits[i];
         double bit_start = start_time + i * BIT_DURATION;
         double bit_end   = start_time + (i + 1) * BIT_DURATION;
+        if(i==0){
+            sleep_until(bit_start-1); 
 
-        sleep_until(bit_start); 
+        }else{
+            sleep_until(bit_start); 
+        }
 
         if (bit == '1')
             hammer_memory(bit_end); 

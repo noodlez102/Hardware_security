@@ -233,6 +233,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     double start_time = wait_for_sync();
+    
     sleep_until(start_time - 0.5);
     run_simple_stream();
     char *received = (char *)malloc(num_bits + 1);
