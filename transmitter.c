@@ -28,39 +28,6 @@ static void sleep_until(double target)
     nanosleep(&ts, NULL);
 }
 
-// static void hammer_memory(double until)
-// {
-//     pid_t pid = fork();
-//     if (pid == 0) {
-//         int devnull = open("/dev/null", O_WRONLY);
-//         if (devnull == -1) {
-//             perror("open");
-//             _exit(1);
-//         }
-
-//         dup2(devnull, STDOUT_FILENO);
-//         dup2(devnull, STDERR_FILENO);
-
-//         close(devnull);
-
-//         execl("./simple_stream", "simple_stream", NULL);
-
-//         perror("execl failed");
-//         _exit(1);
-//     }
-
-//     else if (pid > 0) {
-//         while (now() < until) {
-//             usleep(1000);  
-//         }
-//         kill(pid, SIGKILL);
-//         waitpid(pid, NULL, 0);
-//     }
-//     else {
-//         perror("fork failed");
-//     }
-// }
-
 static void hammer_memory(double until)
 {
     pid_t pid = fork();
@@ -75,8 +42,9 @@ static void hammer_memory(double until)
         dup2(devnull, STDERR_FILENO);
 
         close(devnull);
-        setpgid(0, 0);
-        execl("/bin/sh", "sh", "./run_multiple_no_prints.sh", NULL);
+
+        execl("./simple_stream", "simple_stream", NULL);
+
         perror("execl failed");
         _exit(1);
     }
@@ -85,13 +53,45 @@ static void hammer_memory(double until)
         while (now() < until) {
             usleep(1000);  
         }
-        kill(-pid, SIGKILL);  // kills the whole process group (sh + all its children)
+        kill(pid, SIGKILL);
         waitpid(pid, NULL, 0);
     }
     else {
         perror("fork failed");
     }
 }
+
+// static void hammer_memory(double until)
+// {
+//     pid_t pid = fork();
+//     if (pid == 0) {
+//         int devnull = open("/dev/null", O_WRONLY);
+//         if (devnull == -1) {
+//             perror("open");
+//             _exit(1);
+//         }
+
+//         dup2(devnull, STDOUT_FILENO);
+//         dup2(devnull, STDERR_FILENO);
+
+//         close(devnull);
+//         setpgid(0, 0);
+//         execl("/bin/sh", "sh", "./run_multiple_no_prints.sh", NULL);
+//         perror("execl failed");
+//         _exit(1);
+//     }
+
+//     else if (pid > 0) {
+//         while (now() < until) {
+//             usleep(1000);  
+//         }
+//         kill(-pid, SIGKILL);
+//         waitpid(pid, NULL, 0);
+//     }
+//     else {
+//         perror("fork failed");
+//     }
+// }
 
 int main(int argc, char *argv[])
 {
