@@ -75,7 +75,6 @@ static double run_simple_stream(void)
     return bw;
 }
 
-
 // static double run_simple_stream(double until)
 // {
 //     int pipefd[2];
@@ -242,11 +241,11 @@ int main(int argc, char *argv[])
     for (int i = 0; i < num_bits; i++) {
         double window_start = start_time + i * BIT_DURATION;
         double window_end   = window_start + BIT_DURATION;
+        sleep_until(window_start);
 
         printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
         fflush(stdout);
 
-        sleep_until(window_start );
         double bw  = run_simple_stream();
         char   bit = (bw < threshold) ? '1' : '0';
         received[i] = bit;
