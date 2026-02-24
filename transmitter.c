@@ -114,10 +114,8 @@ static void sleep_until(double target)
 // }
 
 static void hammer_memory(double until) {
-    // keep 2 processes running at all times for continuous pressure
     pid_t pids[2] = {-1, -1};
     
-    // launch initial two
     for (int s = 0; s < 2; s++) {
         pid_t p = fork();
         if (p == 0) {

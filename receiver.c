@@ -135,7 +135,7 @@ static double wait_for_sync(void)
     // return bw;
 // }
 
-static double run_simple_stream()
+static double run_simple_stream(double window_start)
 {
     int pipefd[2];
     if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
@@ -146,6 +146,7 @@ static double run_simple_stream()
         dup2(pipefd[1], STDOUT_FILENO);
         dup2(pipefd[1], STDERR_FILENO);
         close(pipefd[1]);
+        sleep_until(window_start+0.3);
         execl("./simple_stream", "simple_stream", NULL);
         perror("execl");
         _exit(1);
@@ -185,7 +186,6 @@ static double run_simple_stream()
             accum_len += n;
         }
 
-        usleep(5000);  /* poll every 5ms */
     }
 
     close(pipefd[0]);
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 
     printf("receiver: calibrating baseline (transmitter not yet active)...\n");
     fflush(stdout);
-    double baseline = run_simple_stream();
+    double baseline = run_simple_stream(now());
     if (threshold <= 0.0) {
         threshold = baseline * 0.94;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     double start_time = wait_for_sync();
     
     sleep_until(start_time - 0.5);
-    run_simple_stream();
+    run_simple_stream(now());
     char *received = (char *)malloc(num_bits + 1);
     if (!received) { fprintf(stderr, "malloc failed\n"); return 1; }
 
@@ -243,11 +243,11 @@ int main(int argc, char *argv[])
         double window_start = start_time + i * BIT_DURATION;
         double window_end   = window_start + BIT_DURATION;
 
-        sleep_until(window_start+0.3);
+        // sleep_until(window_start+0.3);
         printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
         fflush(stdout);
 
-        double bw  = run_simple_stream();
+        double bw  = run_simple_stream(window_start);
         char   bit = (bw < threshold) ? '1' : '0';
         received[i] = bit;
 
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
                i, bw, threshold, bit);
         fflush(stdout);
 
-        sleep_until(window_end);
+        //sleep_until(window_end);
     }
     received[num_bits] = '\0';
 
