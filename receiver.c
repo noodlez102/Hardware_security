@@ -234,8 +234,6 @@ int main(int argc, char *argv[])
 
     double start_time = wait_for_sync();
 
-    // sleep_until(start_time);
-
     char *received = (char *)malloc(num_bits + 1);
     if (!received) { fprintf(stderr, "malloc failed\n"); return 1; }
 
