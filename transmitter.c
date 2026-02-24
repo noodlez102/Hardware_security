@@ -27,6 +27,7 @@ static void sleep_until(double target)
     ts.tv_nsec = (long)((remaining - ts.tv_sec) * 1e9);
     nanosleep(&ts, NULL);
 }
+
 static void hammer_memory(double until) {
     while (now() < until) {
         pid_t pid = fork();
@@ -46,7 +47,7 @@ static void hammer_memory(double until) {
             break;
         }
     }
-// }
+}
 // static void hammer_memory(double until)
 // {
 //     pid_t pid = fork();
