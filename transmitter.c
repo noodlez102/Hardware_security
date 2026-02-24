@@ -28,59 +28,60 @@ static void sleep_until(double target)
     nanosleep(&ts, NULL);
 }
 
-static void hammer_memory(double until) {
-    while (now() < until) {
-        pid_t pid = fork();
-        if (pid == 0) {
-            int devnull = open("/dev/null", O_WRONLY);
-            if (devnull == -1) { perror("open"); _exit(1); }
-            dup2(devnull, STDOUT_FILENO);
-            dup2(devnull, STDERR_FILENO);
-            close(devnull);
-            execl("./simple_stream", "simple_stream", NULL);
-            perror("execl failed");
-            _exit(1);
-        } else if (pid > 0) {
-            waitpid(pid, NULL, 0);  // wait for this run to finish, then loop
-        } else {
-            perror("fork failed");
-            break;
-        }
-    }
-}
-// static void hammer_memory(double until)
-// {
-//     pid_t pid = fork();
-//     if (pid == 0) {
-//         int devnull = open("/dev/null", O_WRONLY);
-//         if (devnull == -1) {
-//             perror("open");
-//             _exit(1);
-//         }
-
-//         dup2(devnull, STDOUT_FILENO);
-//         dup2(devnull, STDERR_FILENO);
-
-//         close(devnull);
-//         while (1) {
+// static void hammer_memory(double until) {
+//     while (now() < until) {
+//         pid_t pid = fork();
+//         if (pid == 0) {
+//             int devnull = open("/dev/null", O_WRONLY);
+//             dup2(devnull, STDOUT_FILENO);
+//             dup2(devnull, STDERR_FILENO);
+//             close(devnull);
 //             execl("./simple_stream", "simple_stream", NULL);
-//             // If exec fails:
 //             perror("execl failed");
 //             _exit(1);
+//         } else if (pid > 0) {
+//             waitpid(pid, NULL, 0);
+//         } else {
+//             perror("fork failed");
+//             break;
 //         }
-//     }
-
-//     else if (pid > 0) {
-//         while (now() < until) {
-//             usleep(1000);  
-//         }
-//         kill(pid, SIGKILL);
-//         waitpid(pid, NULL, 0);
-//     }
-//     else {
-//         perror("fork failed");
 //     }
 // }
+static void hammer_memory(double until)
+{
+    pid_t pid = fork();
+    if (pid == 0) {
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull == -1) {
+            perror("open");
+            _exit(1);
+        }
+
+        dup2(devnull, STDOUT_FILENO);
+        dup2(devnull, STDERR_FILENO);
+
+        close(devnull);
+        while (1) {
+            pid_t c = fork();
+
+            if (c == 0) {
+                execl("./simple_stream", "simple_stream", NULL);
+                perror("execl failed");
+                _exit(1);
+            }
+
+            waitpid(c, NULL, 0);
+        }
+    }else if (pid > 0) {
+        while (now() < until) {
+            usleep(1000);  
+        }
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, 0);
+    }else {
+        perror("fork failed");
+    }
+}
 
 // static void hammer_memory(double until)
 // {
