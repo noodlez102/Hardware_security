@@ -51,83 +51,83 @@ static double wait_for_sync(void)
     return start_time;
 }
 
-static double run_simple_stream(void)
-{
-    FILE *fp = popen("./simple_stream", "r");
-    if (!fp) { perror("popen"); return -1.0; }
-
-    char   line[512];
-    double bw = -1.0;
-
-    while (fgets(line, sizeof(line), fp)) {
-        if (strncmp(line, "Copy:", 5) == 0) {
-            char *p = line + 5;
-            while (*p == ' ' || *p == '\t') p++;
-            bw = atof(p);
-        }
-    }
-    pclose(fp);
-
-    if (bw < 0.0) {
-        fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
-        bw = 0.0;
-    }
-    return bw;
-}
-
-// static double run_simple_stream(double until)
+// static double run_simple_stream(void)
 // {
-//     int pipefd[2];
-//     if (pipe(pipefd) == -1) {
-//         perror("pipe");
-//         return -1.0;
-//     }
+//     FILE *fp = popen("./simple_stream", "r");
+//     if (!fp) { perror("popen"); return -1.0; }
 
-//     pid_t pid = fork();
-
-//     if (pid == 0) {
-//         close(pipefd[0]); 
-
-//         dup2(pipefd[1], STDOUT_FILENO);
-//         dup2(pipefd[1], STDERR_FILENO);
-//         close(pipefd[1]);
-
-//         execl("./simple_stream", "simple_stream", NULL);
-//         perror("execl");
-//         _exit(1);
-//     }
-
-//     close(pipefd[1]);  
-
-//     fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
-
-//     char buffer[512];
+//     char   line[512];
 //     double bw = -1.0;
 
-
-//         ssize_t n = read(pipefd[0], buffer, sizeof(buffer) - 1);
-//         if (n > 0) {
-//             buffer[n] = '\0';
-
-//             char *line = strtok(buffer, "\n");
-//             while (line) {
-//                 if (strncmp(line, "Copy:", 5) == 0) {
-//                     char *p = line + 5;
-//                     while (*p == ' ' || *p == '\t') p++;
-//                     bw = atof(p);
-//                 }
-//                 line = strtok(NULL, "\n");
-//             }
+//     while (fgets(line, sizeof(line), fp)) {
+//         if (strncmp(line, "Copy:", 5) == 0) {
+//             char *p = line + 5;
+//             while (*p == ' ' || *p == '\t') p++;
+//             bw = atof(p);
 //         }
+//     }
+//     pclose(fp);
 
-//         usleep(1000);  
-
-//     kill(pid, SIGKILL);
-//     waitpid(pid, NULL, 0);
-//     close(pipefd[0]);
-
+//     if (bw < 0.0) {
+//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
+//         bw = 0.0;
+//     }
 //     return bw;
 // }
+
+static double run_simple_stream(double until)
+{
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        return -1.0;
+    }
+
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        close(pipefd[0]); 
+
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+
+        execl("./simple_stream", "simple_stream", NULL);
+        perror("execl");
+        _exit(1);
+    }
+
+    close(pipefd[1]);  
+
+    fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+
+    char buffer[512];
+    double bw = -1.0;
+
+
+        ssize_t n = read(pipefd[0], buffer, sizeof(buffer) - 1);
+        if (n > 0) {
+            buffer[n] = '\0';
+
+            char *line = strtok(buffer, "\n");
+            while (line) {
+                if (strncmp(line, "Copy:", 5) == 0) {
+                    char *p = line + 5;
+                    while (*p == ' ' || *p == '\t') p++;
+                    bw = atof(p);
+                }
+                line = strtok(NULL, "\n");
+            }
+        }
+
+        usleep(1000);  
+
+    kill(pid, SIGKILL);
+    waitpid(pid, NULL, 0);
+    close(pipefd[0]);
+
+    return bw;
+}
 
 // static double run_simple_stream(double until)
 // {
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 
     printf("receiver: calibrating baseline (transmitter not yet active)...\n");
     fflush(stdout);
-    double baseline = run_simple_stream();
+    double baseline = run_simple_stream(now()+1);
     if (threshold <= 0.0) {
         threshold = baseline * 0.94;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
         printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
         fflush(stdout);
 
-        double bw  = run_simple_stream();
+        double bw  = run_simple_stream(window_end);
         char   bit = (bw < threshold) ? '1' : '0';
         received[i] = bit;
 
