@@ -241,14 +241,14 @@ int main(int argc, char *argv[])
         double window_start = start_time + i * BIT_DURATION;
         double window_end   = window_start + BIT_DURATION;
 
-        sleep_until(window_start);
+        sleep_until(window_start+0.3);
+        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
+        fflush(stdout);
 
         double bw  = run_simple_stream();
         char   bit = (bw < threshold) ? '1' : '0';
         received[i] = bit;
 
-        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, window_start);
-        fflush(stdout);
 
         printf("receiver: bit %2d | Copy rate = %8.0f MB/s | threshold = %.0f | decoded = '%c' \n\n",
                i, bw, threshold, bit);
