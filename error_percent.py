@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-"""
-evaluate.py - Measure the error rate of the covert channel.
-
-Transmits at least 512 random bits, waits for the receiver to finish,
-then compares input vs output and reports accuracy / error rate.
-
-Usage:
-    python3 evaluate.py [--bits 512] [--threshold T]
-
-Both ./transmitter and ./receiver must be in the current directory,
-as well as ./simple_stream (and ./run_multiple.sh if used).
-"""
 
 import argparse
 import random
@@ -19,56 +7,27 @@ import re
 import sys
 import time
 
-# ── Argument parsing ─────────────────────────────────────────────────────────
-parser = argparse.ArgumentParser(description="Covert channel error rate evaluator")
-parser.add_argument("--bits",      type=int,   default=512, help="Number of bits to transmit (>=512)")
-parser.add_argument("--threshold", type=float, default=0.0, help="Fixed BW threshold for receiver (0=auto)")
-args = parser.parse_args()
+NUM_BITS = 512
 
-NUM_BITS = max(512, args.bits)
-
-# ── Generate random bit string ────────────────────────────────────────────────
 random.seed()
 transmitted = ''.join(random.choice('01') for _ in range(NUM_BITS))
-print(f"[eval] Transmitting {NUM_BITS} bits")
-print(f"[eval] First 64 bits: {transmitted[:64]}")
-print()
 
-# ── Build receiver command ────────────────────────────────────────────────────
 rx_cmd = ["./receiver", "--bits", str(NUM_BITS)]
-if args.threshold > 0:
-    rx_cmd += ["--threshold", str(args.threshold)]
+
 
 tx_cmd = ["./transmitter", "--binary", transmitted]
 
-# ── Launch receiver first, then transmitter ───────────────────────────────────
 print("[eval] Starting receiver...")
 rx_proc = subprocess.Popen(rx_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-# Small delay so receiver can calibrate and write sync file before transmitter starts
 time.sleep(0.5)
 
 print("[eval] Starting transmitter...")
 tx_proc = subprocess.Popen(tx_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-# ── Stream transmitter output live ───────────────────────────────────────────
-print()
-for line in tx_proc.stdout:
-    print(f"  [tx] {line}", end="")
-tx_proc.wait()
-print()
-
-# ── Collect receiver output ───────────────────────────────────────────────────
 rx_output = rx_proc.stdout.read()
 rx_proc.wait()
 
-# Print receiver output
-for line in rx_output.splitlines():
-    print(f"  [rx] {line}")
-print()
-
-# ── Parse received bit string from receiver output ────────────────────────────
-# Looks for the line: receiver: received bits -> "0100110..."
 match = re.search(r'received bits\s*->\s*"([01]+)"', rx_output)
 if not match:
     print("[eval] ERROR: could not parse received bits from receiver output")
@@ -78,7 +37,6 @@ received = match.group(1)
 
 if len(received) != NUM_BITS:
     print(f"[eval] WARNING: expected {NUM_BITS} bits, got {len(received)}")
-    # Truncate or pad to compare what we can
     min_len = min(len(transmitted), len(received))
     transmitted = transmitted[:min_len]
     received    = received[:min_len]

@@ -51,29 +51,29 @@ static double wait_for_sync(void)
     return start_time;
 }
 
-static double run_simple_stream(void)
-{
-    FILE *fp = popen("./simple_stream", "r");
-    if (!fp) { perror("popen"); return -1.0; }
+// static double run_simple_stream(void)
+// {
+//     FILE *fp = popen("./simple_stream", "r");
+//     if (!fp) { perror("popen"); return -1.0; }
 
-    char   line[512];
-    double bw = -1.0;
+//     char   line[512];
+//     double bw = -1.0;
 
-    while (fgets(line, sizeof(line), fp)) {
-        if (strncmp(line, "Copy:", 5) == 0) {
-            char *p = line + 5;
-            while (*p == ' ' || *p == '\t') p++;
-            bw = atof(p);
-        }
-    }
-    pclose(fp);
+//     while (fgets(line, sizeof(line), fp)) {
+//         if (strncmp(line, "Copy:", 5) == 0) {
+//             char *p = line + 5;
+//             while (*p == ' ' || *p == '\t') p++;
+//             bw = atof(p);
+//         }
+//     }
+//     pclose(fp);
 
-    if (bw < 0.0) {
-        fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
-        bw = 0.0;
-    }
-    return bw;
-}
+//     if (bw < 0.0) {
+//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
+//         bw = 0.0;
+//     }
+//     return bw;
+// }
 
 // static double run_simple_stream(double until)
 // {
@@ -135,79 +135,79 @@ static double run_simple_stream(void)
     // return bw;
 // }
 
-// static double run_simple_stream()
-// {
-//     int pipefd[2];
-//     if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
+static double run_simple_stream()
+{
+    int pipefd[2];
+    if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
 
-//     pid_t pid = fork();
-//     if (pid == 0) {
-//         close(pipefd[0]);
-//         dup2(pipefd[1], STDOUT_FILENO);
-//         dup2(pipefd[1], STDERR_FILENO);
-//         close(pipefd[1]);
-//         execl("./simple_stream", "simple_stream", NULL);
-//         perror("execl");
-//         _exit(1);
-//     }
+    pid_t pid = fork();
+    if (pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+        execl("./simple_stream", "simple_stream", NULL);
+        perror("execl");
+        _exit(1);
+    }
 
-//     close(pipefd[1]);
-//     fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+    close(pipefd[1]);
+    fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
 
-//     char   accum[65536];
-//     int    accum_len = 0;
-//     double bw        = -1.0;
+    char   accum[65536];
+    int    accum_len = 0;
+    double bw        = -1.0;
 
-//     while (1) {
-//         int   status;
-//         pid_t ret = waitpid(pid, &status, WNOHANG);
-//         if (ret == pid) {
-//             char    tmp[4096];
-//             ssize_t n;
-//             while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0)
-//                 if (accum_len + n < (int)sizeof(accum) - 1) {
-//                     memcpy(accum + accum_len, tmp, n);
-//                     accum_len += n;
-//                 }
-//             break;
-//         }
+    while (1) {
+        int   status;
+        pid_t ret = waitpid(pid, &status, WNOHANG);
+        if (ret == pid) {
+            char    tmp[4096];
+            ssize_t n;
+            while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0)
+                if (accum_len + n < (int)sizeof(accum) - 1) {
+                    memcpy(accum + accum_len, tmp, n);
+                    accum_len += n;
+                }
+            break;
+        }
 
-//         // if (until > 0.0 && now() >= until) {
-//         //     kill(pid, SIGKILL);
-//         //     waitpid(pid, NULL, 0);
-//         //     break;
-//         // }
+        // if (until > 0.0 && now() >= until) {
+        //     kill(pid, SIGKILL);
+        //     waitpid(pid, NULL, 0);
+        //     break;
+        // }
 
-//         char    tmp[4096];
-//         ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
-//         if (n > 0 && accum_len + n < (int)sizeof(accum) - 1) {
-//             memcpy(accum + accum_len, tmp, n);
-//             accum_len += n;
-//         }
+        char    tmp[4096];
+        ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
+        if (n > 0 && accum_len + n < (int)sizeof(accum) - 1) {
+            memcpy(accum + accum_len, tmp, n);
+            accum_len += n;
+        }
 
-//         usleep(5000);  /* poll every 5ms */
-//     }
+        usleep(5000);  /* poll every 5ms */
+    }
 
-//     close(pipefd[0]);
+    close(pipefd[0]);
 
-//     /* Parse accumulated output for the Copy: line */
-//     accum[accum_len] = '\0';
-//     char *line = strtok(accum, "\n");
-//     while (line) {
-//         if (strncmp(line, "Copy:", 5) == 0) {
-//             char *p = line + 5;
-//             while (*p == ' ' || *p == '\t') p++;
-//             bw = atof(p);
-//         }
-//         line = strtok(NULL, "\n");
-//     }
+    /* Parse accumulated output for the Copy: line */
+    accum[accum_len] = '\0';
+    char *line = strtok(accum, "\n");
+    while (line) {
+        if (strncmp(line, "Copy:", 5) == 0) {
+            char *p = line + 5;
+            while (*p == ' ' || *p == '\t') p++;
+            bw = atof(p);
+        }
+        line = strtok(NULL, "\n");
+    }
 
-//     if (bw < 0.0) {
-//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
-//         bw = 0.0;
-//     }
-//     return bw;
-// }
+    if (bw < 0.0) {
+        fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
+        bw = 0.0;
+    }
+    return bw;
+}
 
 int main(int argc, char *argv[])
 {
