@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < num_bits; i++) {
         double window_start = start_time + i * BIT_DURATION;
         double window_end   = window_start + BIT_DURATION;
-        sleep_until(window_start);
+        sleep_until(window_start+0.1*BIT_DURATION);
 
         printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
         fflush(stdout);
