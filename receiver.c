@@ -241,9 +241,9 @@ int main(int argc, char *argv[])
         double window_start = start_time + i * BIT_DURATION;
         double window_end   = window_start + BIT_DURATION;
 
-        sleep_until(window_start+0.05*BIT_DURATION);
+        sleep_until(window_start);
 
-        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f, and sleep time = %0.3f...\n", i, now(),window_start+0.05*BIT_DURATION);
+        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
         fflush(stdout);
 
         double bw  = run_simple_stream();

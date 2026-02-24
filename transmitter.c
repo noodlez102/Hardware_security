@@ -63,13 +63,11 @@ static void hammer_memory(double until)
         close(devnull);
         while (1) {
             pid_t c = fork();
-
             if (c == 0) {
                 execl("./simple_stream", "simple_stream", NULL);
                 perror("execl failed");
                 _exit(1);
             }
-
             waitpid(c, NULL, 0);
         }
     }else if (pid > 0) {
