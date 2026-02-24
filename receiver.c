@@ -75,138 +75,138 @@ static double wait_for_sync(void)
 //     return bw;
 // }
 
-static double run_simple_stream(double until)
-{
-    int pipefd[2];
-    if (pipe(pipefd) == -1) {
-        perror("pipe");
-        return -1.0;
-    }
-
-    pid_t pid = fork();
-
-    if (pid == 0) {
-        close(pipefd[0]); 
-
-        dup2(pipefd[1], STDOUT_FILENO);
-        dup2(pipefd[1], STDERR_FILENO);
-        close(pipefd[1]);
-
-        execl("./simple_stream", "simple_stream", NULL);
-        perror("execl");
-        _exit(1);
-    }
-
-    close(pipefd[1]);  
-
-    fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
-
-    char buffer[512];
-    double bw = -1.0;
-
-
-        ssize_t n = read(pipefd[0], buffer, sizeof(buffer) - 1);
-        if (n > 0) {
-            buffer[n] = '\0';
-
-            char *line = strtok(buffer, "\n");
-            while (line) {
-                if (strncmp(line, "Copy:", 5) == 0) {
-                    char *p = line + 5;
-                    while (*p == ' ' || *p == '\t') p++;
-                    bw = atof(p);
-                }
-                line = strtok(NULL, "\n");
-            }
-        }
-
-        usleep(1000);  
-
-    kill(pid, SIGKILL);
-    waitpid(pid, NULL, 0);
-    close(pipefd[0]);
-
-    return bw;
-}
-
 // static double run_simple_stream(double until)
 // {
 //     int pipefd[2];
-//     if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
+//     if (pipe(pipefd) == -1) {
+//         perror("pipe");
+//         return -1.0;
+//     }
 
 //     pid_t pid = fork();
+
 //     if (pid == 0) {
-//         close(pipefd[0]);
+//         close(pipefd[0]); 
+
 //         dup2(pipefd[1], STDOUT_FILENO);
 //         dup2(pipefd[1], STDERR_FILENO);
 //         close(pipefd[1]);
+
 //         execl("./simple_stream", "simple_stream", NULL);
 //         perror("execl");
 //         _exit(1);
 //     }
 
-//     close(pipefd[1]);
+//     close(pipefd[1]);  
+
 //     fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
 
-//     /* Accumulate all output so strtok works across multiple reads */
-//     char   accum[65536];
-//     int    accum_len = 0;
-//     double bw        = -1.0;
+//     char buffer[512];
+//     double bw = -1.0;
 
-//     while (1) {
-//         /* Check if simple_stream finished naturally */
-//         int   status;
-//         pid_t ret = waitpid(pid, &status, WNOHANG);
-//         if (ret == pid) {
-//             /* Drain any remaining output then stop */
-//             char    tmp[4096];
-//             ssize_t n;
-//             while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0)
-//                 if (accum_len + n < (int)sizeof(accum) - 1) {
-//                     memcpy(accum + accum_len, tmp, n);
-//                     accum_len += n;
+
+//         ssize_t n = read(pipefd[0], buffer, sizeof(buffer) - 1);
+//         if (n > 0) {
+//             buffer[n] = '\0';
+
+//             char *line = strtok(buffer, "\n");
+//             while (line) {
+//                 if (strncmp(line, "Copy:", 5) == 0) {
+//                     char *p = line + 5;
+//                     while (*p == ' ' || *p == '\t') p++;
+//                     bw = atof(p);
 //                 }
-//             break;
+//                 line = strtok(NULL, "\n");
+//             }
 //         }
 
-//         /* Kill if we've passed the deadline */
-//         if (until > 0.0 && now() >= until) {
-//             kill(pid, SIGKILL);
-//             waitpid(pid, NULL, 0);
-//             break;
-//         }
+//         usleep(1000);  
 
-//         /* Read whatever output is available right now */
-//         char    tmp[4096];
-//         ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
-//         if (n > 0 && accum_len + n < (int)sizeof(accum) - 1) {
-//             memcpy(accum + accum_len, tmp, n);
-//             accum_len += n;
-//         }
-
-//         usleep(5000);  /* poll every 5ms */
-//     }
-
+//     kill(pid, SIGKILL);
+//     waitpid(pid, NULL, 0);
 //     close(pipefd[0]);
 
-//     /* Parse accumulated output for the Copy: line */
-//     accum[accum_len] = '\0';
-//     char *line = strtok(accum, "\n");
-//     while (line) {
-//         if (strncmp(line, "Copy:", 5) == 0) {
-//             char *p = line + 5;
-//             while (*p == ' ' || *p == '\t') p++;
-//             bw = atof(p);
-//         }
-//         line = strtok(NULL, "\n");
-//     }
-
-//     if (bw < 0.0) {
-//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
-//         bw = 0.0;
-//     }
 //     return bw;
 // }
+
+static double run_simple_stream(double until)
+{
+    int pipefd[2];
+    if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+        execl("./simple_stream", "simple_stream", NULL);
+        perror("execl");
+        _exit(1);
+    }
+
+    close(pipefd[1]);
+    fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+
+    /* Accumulate all output so strtok works across multiple reads */
+    char   accum[65536];
+    int    accum_len = 0;
+    double bw        = -1.0;
+
+    while (1) {
+        /* Check if simple_stream finished naturally */
+        int   status;
+        pid_t ret = waitpid(pid, &status, WNOHANG);
+        if (ret == pid) {
+            /* Drain any remaining output then stop */
+            char    tmp[4096];
+            ssize_t n;
+            while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0)
+                if (accum_len + n < (int)sizeof(accum) - 1) {
+                    memcpy(accum + accum_len, tmp, n);
+                    accum_len += n;
+                }
+            break;
+        }
+
+        /* Kill if we've passed the deadline */
+        if (until > 0.0 && now() >= until) {
+            kill(pid, SIGKILL);
+            waitpid(pid, NULL, 0);
+            break;
+        }
+
+        /* Read whatever output is available right now */
+        char    tmp[4096];
+        ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
+        if (n > 0 && accum_len + n < (int)sizeof(accum) - 1) {
+            memcpy(accum + accum_len, tmp, n);
+            accum_len += n;
+        }
+
+        usleep(5000);  /* poll every 5ms */
+    }
+
+    close(pipefd[0]);
+
+    /* Parse accumulated output for the Copy: line */
+    accum[accum_len] = '\0';
+    char *line = strtok(accum, "\n");
+    while (line) {
+        if (strncmp(line, "Copy:", 5) == 0) {
+            char *p = line + 5;
+            while (*p == ' ' || *p == '\t') p++;
+            bw = atof(p);
+        }
+        line = strtok(NULL, "\n");
+    }
+
+    if (bw < 0.0) {
+        fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
+        bw = 0.0;
+    }
+    return bw;
+}
 
 int main(int argc, char *argv[])
 {
