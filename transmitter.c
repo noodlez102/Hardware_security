@@ -44,11 +44,14 @@ static void hammer_memory(double until) {
             perror("execl failed");
             _exit(1);
         } else if (pid > 0 ) {
-            if (until > 0.0 && mysecond() >= until) {
-                kill(pid, SIGKILL);
-                waitpid(pid, NULL, 0);
-                break;
+            while(1){
+                if (until > 0.0 && mysecond() >= until) {
+                    kill(pid, SIGKILL);
+                    waitpid(pid, NULL, 0);
+                    break;
+                }
             }
+
         }
     }
 
