@@ -47,6 +47,13 @@ static void hammer_memory(double until) {
             waitpid(pid, NULL, 0);
         }
     }
+    
+    if (pid > 0) {
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, 0);
+        break;    
+    }
+
 }
 
 int main(int argc, char *argv[])
