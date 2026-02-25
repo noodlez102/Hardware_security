@@ -32,31 +32,60 @@ static void sleep_until(double target)
     nanosleep(&ts, NULL);
 }
 
-static void hammer_memory(double until) { //double check to make sure it kills properly
+// static void hammer_memory(double until) { //double check to make sure it kills properly
+//     while (mysecond() < until) {
+//         pid_t pid = fork();
+//         if (pid == 0) {
+//             // int devnull = open("/dev/null", O_WRONLY);
+//             // dup2(devnull, STDOUT_FILENO);
+//             // dup2(devnull, STDERR_FILENO);
+//             // close(devnull);
+//             execl("./simple_stream", "simple_stream", NULL);
+//             perror("execl failed");
+//             _exit(1);
+//         } else if (pid > 0 ) {
+//             while(1){
+//                 if (until > 0.0 && mysecond() >= until) {
+//                     kill(pid, SIGKILL);
+//                     waitpid(pid, NULL, 0);
+//                     break;
+//                 }
+//             }
+
+//         }
+//     }
+
+// }
+
+static void hammer_memory(double until) {
     while (mysecond() < until) {
+
         pid_t pid = fork();
+
         if (pid == 0) {
-            int devnull = open("/dev/null", O_WRONLY);
-            dup2(devnull, STDOUT_FILENO);
-            dup2(devnull, STDERR_FILENO);
-            close(devnull);
             execl("./simple_stream", "simple_stream", NULL);
             perror("execl failed");
             _exit(1);
-        } else if (pid > 0 ) {
-            while(1){
-                if (until > 0.0 && mysecond() >= until) {
+        }
+
+        else if (pid > 0) {
+            int status;
+
+            while (1) {
+                if (mysecond() >= until) {
                     kill(pid, SIGKILL);
                     waitpid(pid, NULL, 0);
-                    break;
+                    return;  // time expired → stop entirely
+                }
+
+                pid_t result = waitpid(pid, &status, WNOHANG);
+                if (result == pid) {
+                    break;  // child finished normally → start next
                 }
             }
-
         }
     }
-
 }
-
 int main(int argc, char *argv[])
 {
     const char *bits = NULL;
