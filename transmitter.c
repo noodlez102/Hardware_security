@@ -32,7 +32,8 @@ static void sleep_until(double target)
     nanosleep(&ts, NULL);
 }
 
-static void hammer_memory(double until) {
+static void hammer_memory(double until)
+{
     while (mysecond() < until) {
         pid_t pid = fork();
         if (pid == 0) {
@@ -43,17 +44,22 @@ static void hammer_memory(double until) {
             execl("./simple_stream", "simple_stream", NULL);
             perror("execl failed");
             _exit(1);
-        } else if (pid > 0) {
-            waitpid(pid, NULL, 0);
+        }
+
+        while (1) {
+            int status;
+            pid_t result = waitpid(pid, &status, WNOHANG);
+            if (result == pid) {
+                break;
+            }
+            if (mysecond() >= until) {
+                kill(pid, SIGKILL);
+                waitpid(pid, NULL, 0);
+                return;  
+            }
+            usleep(1000);
         }
     }
-    
-    if (pid > 0) {
-        kill(pid, SIGKILL);
-        waitpid(pid, NULL, 0);
-        break;    
-    }
-
 }
 
 int main(int argc, char *argv[])
