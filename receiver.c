@@ -8,6 +8,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <sys/time.h>
+
 
 #define SYNC_FILE    "/tmp/covert_start"
 #define BIT_DURATION 1.0
