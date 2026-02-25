@@ -13,16 +13,18 @@
 #define BIT_DURATION 1.0
 #define DEFAULT_BITS 16
 
-static double now(void)
+double mysecond()
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + ts.tv_nsec * 1e-9;
-}
+        struct timeval tp;
+        struct timezone tzp;
+        int i;
 
+        i = gettimeofday(&tp,&tzp);
+        return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
 static void sleep_until(double target)
 {
-    double remaining = target - now();
+    double remaining = target - mysecond();
     if (remaining <= 0.0) return;
     struct timespec ts;
     ts.tv_sec  = (time_t)remaining;
@@ -46,14 +48,14 @@ static double wait_for_sync(void)
     fclose(sf);
 
     printf("receiver: sync acquired — bit 0 starts at t=%.3f (now=%.3f)\n\n",
-           start_time, now());
+           start_time, mysecond());
     fflush(stdout);
     return start_time;
 }
 
-static double run_simple_stream(void)
+static double run_simple_stream(double window_start)
 {
-        sleep_until(window_start+0.3);
+    sleep_until(window_start+0.3);
     FILE *fp = popen("./simple_stream", "r");
     if (!fp) { perror("popen"); return -1.0; }
 
@@ -67,6 +69,7 @@ static double run_simple_stream(void)
             bw = atof(p);
         }
     }
+
     pclose(fp);
 
     if (bw < 0.0) {
@@ -75,140 +78,6 @@ static double run_simple_stream(void)
     }
     return bw;
 }
-
-// static double run_simple_stream(double until)
-// {
-    // int pipefd[2];
-    // if (pipe(pipefd) == -1) {
-    //     perror("pipe");
-    //     return -1.0;
-    // }
-
-    // pid_t pid = fork();
-
-    // if (pid == 0) {
-    //     // ---- CHILD ----
-    //     close(pipefd[0]); // close read end
-
-    //     dup2(pipefd[1], STDOUT_FILENO);
-    //     dup2(pipefd[1], STDERR_FILENO);
-    //     close(pipefd[1]);
-
-    //     execl("./simple_stream", "simple_stream", NULL);
-    //     perror("execl");
-    //     _exit(1);
-    // }
-
-    // // ---- PARENT ----
-    // close(pipefd[1]);  // close write end
-
-    // // Make pipe non-blocking
-    // fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
-
-    // char buffer[512];
-    // double bw = -1.0;
-
-    // while (now() < until) {
-
-    //     ssize_t n = read(pipefd[0], buffer, sizeof(buffer) - 1);
-    //     if (n > 0) {
-    //         buffer[n] = '\0';
-
-    //         char *line = strtok(buffer, "\n");
-    //         while (line) {
-    //             if (strncmp(line, "Copy:", 5) == 0) {
-    //                 char *p = line + 5;
-    //                 while (*p == ' ' || *p == '\t') p++;
-    //                 bw = atof(p);
-    //             }
-    //             line = strtok(NULL, "\n");
-    //         }
-    //     }
-
-    //     usleep(1000);  // small sleep to reduce spin
-    // }
-
-    // // Kill STREAM at end of bit window
-    // kill(pid, SIGKILL);
-    // waitpid(pid, NULL, 0);
-    // close(pipefd[0]);
-
-    // return bw;
-// }
-
-// static double run_simple_stream(double window_start)
-// {
-//     int pipefd[2];
-//     if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
-
-//     pid_t pid = fork();
-//     if (pid == 0) {
-//         close(pipefd[0]);
-//         dup2(pipefd[1], STDOUT_FILENO);
-//         dup2(pipefd[1], STDERR_FILENO);
-//         close(pipefd[1]);
-//         sleep_until(window_start+0.3);
-//         execl("./simple_stream", "simple_stream", NULL);
-//         perror("execl");
-//         _exit(1);
-//     }
-
-//     close(pipefd[1]);
-//     fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
-
-//     char   accum[65536];
-//     int    accum_len = 0;
-//     double bw        = -1.0;
-
-//     while (1) {
-//         int   status;
-//         pid_t ret = waitpid(pid, &status, WNOHANG);
-//         if (ret == pid) {
-//             char    tmp[4096];
-//             ssize_t n;
-//             while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0)
-//                 if (accum_len + n < (int)sizeof(accum) - 1) {
-//                     memcpy(accum + accum_len, tmp, n);
-//                     accum_len += n;
-//                 }
-//             break;
-//         }
-
-//         // if (until > 0.0 && now() >= until) {
-//         //     kill(pid, SIGKILL);
-//         //     waitpid(pid, NULL, 0);
-//         //     break;
-//         // }
-
-//         char    tmp[4096];
-//         ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
-//         if (n > 0 && accum_len + n < (int)sizeof(accum) - 1) {
-//             memcpy(accum + accum_len, tmp, n);
-//             accum_len += n;
-//         }
-
-//     }
-
-//     close(pipefd[0]);
-
-//     /* Parse accumulated output for the Copy: line */
-//     accum[accum_len] = '\0';
-//     char *line = strtok(accum, "\n");
-//     while (line) {
-//         if (strncmp(line, "Copy:", 5) == 0) {
-//             char *p = line + 5;
-//             while (*p == ' ' || *p == '\t') p++;
-//             bw = atof(p);
-//         }
-//         line = strtok(NULL, "\n");
-//     }
-
-//     if (bw < 0.0) {
-//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
-//         bw = 0.0;
-//     }
-//     return bw;
-// }
 
 int main(int argc, char *argv[])
 {
@@ -222,7 +91,7 @@ int main(int argc, char *argv[])
 
     printf("receiver: calibrating baseline (transmitter not yet active)...\n");
     fflush(stdout);
-    double baseline = run_simple_stream(now());
+    double baseline = run_simple_stream(mysecond());
     if (threshold <= 0.0) {
         threshold = baseline * 0.94;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
@@ -236,7 +105,7 @@ int main(int argc, char *argv[])
     double start_time = wait_for_sync();
     
     // sleep_until(start_time - 0.5);
-    // run_simple_stream(now());
+    // run_simple_stream(mysecond());
     char *received = (char *)malloc(num_bits + 1);
     if (!received) { fprintf(stderr, "malloc failed\n"); return 1; }
 
@@ -245,7 +114,7 @@ int main(int argc, char *argv[])
         double window_end   = window_start + BIT_DURATION;
 
         // sleep_until(window_start+0.3);
-        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, now());
+        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
         fflush(stdout);
 
         double bw  = run_simple_stream(window_start);
@@ -253,8 +122,7 @@ int main(int argc, char *argv[])
         received[i] = bit;
 
 
-        printf("receiver: bit %2d | Copy rate = %8.0f MB/s | threshold = %.0f | decoded = '%c' \n\n",
-               i, bw, threshold, bit);
+        printf("receiver: bit %2d | Copy rate = %8.0f MB/s | threshold = %.0f | decoded = '%c' \n\n", i, bw, threshold, bit);
         fflush(stdout);
 
         //sleep_until(window_end);

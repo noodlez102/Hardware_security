@@ -11,16 +11,19 @@
 #define SYNC_FILE    "/tmp/covert_start"
 #define BIT_DURATION 1.0  
 
-static double now(void)
+double mysecond()
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + ts.tv_nsec * 1e-9;
+        struct timeval tp;
+        struct timezone tzp;
+        int i;
+
+        i = gettimeofday(&tp,&tzp);
+        return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
 static void sleep_until(double target)
 {
-    double remaining = target - now();
+    double remaining = target - mysecond();
     if (remaining <= 0.0) return;
     struct timespec ts;
     ts.tv_sec  = (time_t)remaining;
@@ -29,7 +32,7 @@ static void sleep_until(double target)
 }
 
 static void hammer_memory(double until) {
-    while (now() < until) {
+    while (mysecond() < until) {
         pid_t pid = fork();
         if (pid == 0) {
             int devnull = open("/dev/null", O_WRONLY);
@@ -57,22 +60,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    double start_time = now() + 2.0;   
+    double start_time = mysecond() + 2.0;   
     FILE *sf = fopen(SYNC_FILE, "w");
     if (!sf) { perror("fopen sync file"); return 1; }
     fprintf(sf, "%.6f\n", start_time);
     fclose(sf);
 
-    printf("transmitter: sync file written (%s)\n", SYNC_FILE);
     printf("transmitter: bit 0 starts in ~2s\n");
-    printf("transmitter: sending %zu bits, %.1fs per bit\n\n", strlen(bits), BIT_DURATION);
-    fflush(stdout);
-
 
     for (size_t i = 0; i < strlen(bits); i++) {
-        char   bit     = bits[i];
+        char   bit = bits[i];
         double bit_start = start_time + i * BIT_DURATION;
-        double bit_end   = start_time + (i + 1) * BIT_DURATION;
+        double bit_end = start_time + (i + 1) * BIT_DURATION;
+        
         if(i==0){
             sleep_until(bit_start-1); 
 

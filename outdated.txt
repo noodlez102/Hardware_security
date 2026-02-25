@@ -101,3 +101,137 @@ done:
     for (int s = 0; s < 2; s++)
         if (pids[s] > 0) { kill(pids[s], SIGKILL); waitpid(pids[s], NULL, 0); }
 }
+
+// static double run_simple_stream(double until)
+// {
+    // int pipefd[2];
+    // if (pipe(pipefd) == -1) {
+    //     perror("pipe");
+    //     return -1.0;
+    // }
+
+    // pid_t pid = fork();
+
+    // if (pid == 0) {
+    //     // ---- CHILD ----
+    //     close(pipefd[0]); // close read end
+
+    //     dup2(pipefd[1], STDOUT_FILENO);
+    //     dup2(pipefd[1], STDERR_FILENO);
+    //     close(pipefd[1]);
+
+    //     execl("./simple_stream", "simple_stream", NULL);
+    //     perror("execl");
+    //     _exit(1);
+    // }
+
+    // // ---- PARENT ----
+    // close(pipefd[1]);  // close write end
+
+    // // Make pipe non-blocking
+    // fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+
+    // char buffer[512];
+    // double bw = -1.0;
+
+    // while (now() < until) {
+
+    //     ssize_t n = read(pipefd[0], buffer, sizeof(buffer) - 1);
+    //     if (n > 0) {
+    //         buffer[n] = '\0';
+
+    //         char *line = strtok(buffer, "\n");
+    //         while (line) {
+    //             if (strncmp(line, "Copy:", 5) == 0) {
+    //                 char *p = line + 5;
+    //                 while (*p == ' ' || *p == '\t') p++;
+    //                 bw = atof(p);
+    //             }
+    //             line = strtok(NULL, "\n");
+    //         }
+    //     }
+
+    //     usleep(1000);  // small sleep to reduce spin
+    // }
+
+    // // Kill STREAM at end of bit window
+    // kill(pid, SIGKILL);
+    // waitpid(pid, NULL, 0);
+    // close(pipefd[0]);
+
+    // return bw;
+// }
+
+// static double run_simple_stream(double window_start)
+// {
+//     int pipefd[2];
+//     if (pipe(pipefd) == -1) { perror("pipe"); return -1.0; }
+
+//     pid_t pid = fork();
+//     if (pid == 0) {
+//         close(pipefd[0]);
+//         dup2(pipefd[1], STDOUT_FILENO);
+//         dup2(pipefd[1], STDERR_FILENO);
+//         close(pipefd[1]);
+//         sleep_until(window_start+0.3);
+//         execl("./simple_stream", "simple_stream", NULL);
+//         perror("execl");
+//         _exit(1);
+//     }
+
+//     close(pipefd[1]);
+//     fcntl(pipefd[0], F_SETFL, O_NONBLOCK);
+
+//     char   accum[65536];
+//     int    accum_len = 0;
+//     double bw        = -1.0;
+
+//     while (1) {
+//         int   status;
+//         pid_t ret = waitpid(pid, &status, WNOHANG);
+//         if (ret == pid) {
+//             char    tmp[4096];
+//             ssize_t n;
+//             while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0)
+//                 if (accum_len + n < (int)sizeof(accum) - 1) {
+//                     memcpy(accum + accum_len, tmp, n);
+//                     accum_len += n;
+//                 }
+//             break;
+//         }
+
+//         // if (until > 0.0 && now() >= until) {
+//         //     kill(pid, SIGKILL);
+//         //     waitpid(pid, NULL, 0);
+//         //     break;
+//         // }
+
+//         char    tmp[4096];
+//         ssize_t n = read(pipefd[0], tmp, sizeof(tmp) - 1);
+//         if (n > 0 && accum_len + n < (int)sizeof(accum) - 1) {
+//             memcpy(accum + accum_len, tmp, n);
+//             accum_len += n;
+//         }
+
+//     }
+
+//     close(pipefd[0]);
+
+//     /* Parse accumulated output for the Copy: line */
+//     accum[accum_len] = '\0';
+//     char *line = strtok(accum, "\n");
+//     while (line) {
+//         if (strncmp(line, "Copy:", 5) == 0) {
+//             char *p = line + 5;
+//             while (*p == ' ' || *p == '\t') p++;
+//             bw = atof(p);
+//         }
+//         line = strtok(NULL, "\n");
+//     }
+
+//     if (bw < 0.0) {
+//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
+//         bw = 0.0;
+//     }
+//     return bw;
+// }
