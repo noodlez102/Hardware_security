@@ -185,13 +185,13 @@ main()
     // printf(" will be used to compute the reported bandwidth.\n");
 
 #ifdef _OPENMP
-    printf(HLINE);
+    // printf(HLINE);
 #pragma omp parallel 
     {
 #pragma omp master
 	{
 	    k = omp_get_num_threads();
-	    printf ("Number of Threads requested = %i\n",k);
+	    // printf ("Number of Threads requested = %i\n",k);
         }
     }
 #endif
@@ -201,7 +201,7 @@ main()
 #pragma omp parallel
 #pragma omp atomic 
 		k++;
-    printf ("Number of Threads counted = %i\n",k);
+    // printf ("Number of Threads counted = %i\n",k);
 #endif
 
     /* Get initial value for system clock. */
