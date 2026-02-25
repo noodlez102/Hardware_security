@@ -82,13 +82,14 @@ int main(int argc, char *argv[])
             sleep_until(bit_start); 
         }
 
+        printf("transmitter: bit %zu = '%c' -> %s starting at time = %.3f\n", i, bit, bit == '1' ? "hammered" : "slept", mysecond());
+        fflush(stdout);
+
         if (bit == '1')
             hammer_memory(bit_end); 
         else
             sleep_until(bit_end);
 
-        printf("transmitter: bit %zu = '%c' -> %s finished at time = %.3f\n", i, bit, bit == '1' ? "hammered" : "slept", mysecond());
-        fflush(stdout);
     }
 
     remove(SYNC_FILE);
