@@ -74,7 +74,7 @@ static double run_simple_stream(double window_start) //mess around with boundrie
     }
 
     pclose(fp);
-    printf("took %.3f to run and get bw", mysecond()-begin);
+    printf("took %.3f to run and get bw\n", mysecond()-begin);
     fflush(stdout);
     if (bw < 0.0) {
         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");

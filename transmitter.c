@@ -10,7 +10,7 @@
 #include <sys/time.h>
 
 #define SYNC_FILE    "/tmp/covert_start"
-#define BIT_DURATION 1.0  
+#define BIT_DURATION 10.0  
 
 double mysecond()
 {
