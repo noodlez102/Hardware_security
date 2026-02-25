@@ -43,8 +43,12 @@ static void hammer_memory(double until) {
             execl("./simple_stream", "simple_stream", NULL);
             perror("execl failed");
             _exit(1);
-        } else if (pid > 0) {
-            waitpid(pid, NULL, 0);
+        } else if (pid > 0 ) {
+            if (until > 0.0 && mysecond() >= until) {
+                kill(pid, SIGKILL);
+                waitpid(pid, NULL, 0);
+                break;
+            }
         }
     }
 
@@ -71,13 +75,12 @@ int main(int argc, char *argv[])
     printf("transmitter: bit 0 starts in ~2s\n");
 
     for (size_t i = 0; i < strlen(bits); i++) {
-        char   bit = bits[i];
+        char bit = bits[i];
         double bit_start = start_time + i * BIT_DURATION;
         double bit_end = start_time + (i + 1) * BIT_DURATION;
         
         if(i==0){
             sleep_until(bit_start-1); 
-
         }else{
             sleep_until(bit_start); 
         }
