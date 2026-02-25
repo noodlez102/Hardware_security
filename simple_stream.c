@@ -7,7 +7,8 @@
 
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
- *
+ *  gcc -DSTREAM_ARRAY_SIZE=10000000 -fopenmp -O3 simple_stream.c -o simple_stream
+ *  export OMP_NUM_THREADS=10
  *	1) STREAM requires different amounts of memory to run on different
  *           systems, depending on both the system cache size(s) and the
  *           granularity of the system timer.
