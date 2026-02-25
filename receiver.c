@@ -35,7 +35,7 @@ static void sleep_until(double target)
     nanosleep(&ts, NULL);
 }
 
-static double wait_for_sync(void)
+static double wait_for_sync(void) //get rid of this and wait for the nxt minute
 {
     printf("receiver: waiting for transmitter sync file (%s)...\n", SYNC_FILE);
     fflush(stdout);
@@ -55,9 +55,10 @@ static double wait_for_sync(void)
     return start_time;
 }
 
-static double run_simple_stream(double window_start)
+static double run_simple_stream(double window_start) //mess around with boundries to get the exact size of the cache. and use that cache to run ntimes measurements
 {
     sleep_until(window_start+0.001);
+    double begin =mysecond();
     FILE *fp = popen("./simple_stream", "r");
     if (!fp) { perror("popen"); return -1.0; }
 
@@ -73,7 +74,8 @@ static double run_simple_stream(double window_start)
     }
 
     pclose(fp);
-
+    printf("took %.3f to run and get bw", mysecond()-begin);
+    fflush(stdout);
     if (bw < 0.0) {
         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
         bw = 0.0;
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
     double baseline = run_simple_stream(mysecond());
     if (threshold <= 0.0) {
-        threshold = baseline * 0.94;
+        threshold = baseline * 0.9;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
                baseline, threshold);
     } else {
@@ -111,7 +113,7 @@ int main(int argc, char *argv[])
     char *received = (char *)malloc(num_bits + 1);
     if (!received) { fprintf(stderr, "malloc failed\n"); return 1; }
 
-    for (int i = 0; i < num_bits; i++) {
+    for (int i = 0; i < num_bits; i++) { //implement something that checks current time and if it's current time is ahead of where it should be just mark that bit as x
         double window_start = start_time + i * BIT_DURATION;
         double window_end   = window_start + BIT_DURATION;
 
