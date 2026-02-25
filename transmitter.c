@@ -36,10 +36,10 @@ static void hammer_memory(double until) {
     while (mysecond() < until) {
         pid_t pid = fork();
         if (pid == 0) {
-            int devnull = open("/dev/null", O_WRONLY);
-            dup2(devnull, STDOUT_FILENO);
-            dup2(devnull, STDERR_FILENO);
-            close(devnull);
+            // int devnull = open("/dev/null", O_WRONLY);
+            // dup2(devnull, STDOUT_FILENO);
+            // dup2(devnull, STDERR_FILENO);
+            // close(devnull);
             execl("./simple_stream", "simple_stream", NULL);
             perror("execl failed");
             _exit(1);
