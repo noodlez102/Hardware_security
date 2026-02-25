@@ -57,7 +57,7 @@ static double wait_for_sync(void)
 
 static double run_simple_stream(double window_start)
 {
-    sleep_until(window_start+0.1);
+    sleep_until(window_start+0.01);
     FILE *fp = popen("./simple_stream", "r");
     if (!fp) { perror("popen"); return -1.0; }
 

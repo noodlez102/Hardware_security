@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         else
             sleep_until(bit_end);
 
-        printf("transmitter: bit %zu = '%c' -> %s at time = %.3f\n", i, bit, bit == '1' ? "hammered" : "slept", mysecond());
+        printf("transmitter: bit %zu = '%c' -> %s finished at time = %.3f\n", i, bit, bit == '1' ? "hammered" : "slept", mysecond());
         fflush(stdout);
     }
 
