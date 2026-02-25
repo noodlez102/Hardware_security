@@ -24,6 +24,7 @@ double mysecond()
         i = gettimeofday(&tp,&tzp);
         return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
+
 static void sleep_until(double target)
 {
     double remaining = target - mysecond();
