@@ -28,126 +28,21 @@ static void sleep_until(double target)
     nanosleep(&ts, NULL);
 }
 
-// static void hammer_memory(double until) {
-//     while (now() < until) {
-//         pid_t pid = fork();
-//         if (pid == 0) {
-//             int devnull = open("/dev/null", O_WRONLY);
-//             dup2(devnull, STDOUT_FILENO);
-//             dup2(devnull, STDERR_FILENO);
-//             close(devnull);
-//             execl("./simple_stream", "simple_stream", NULL);
-//             perror("execl failed");
-//             _exit(1);
-//         } else if (pid > 0) {
-//             waitpid(pid, NULL, 0);
-//         } else {
-//             perror("fork failed");
-//             break;
-//         }
-//     }
-// }
-// static void hammer_memory(double until)
-// {
-//     pid_t pid = fork();
-//     if (pid == 0) {
-//         int devnull = open("/dev/null", O_WRONLY);
-//         if (devnull == -1) {
-//             perror("open");
-//             _exit(1);
-//         }
-
-//         dup2(devnull, STDOUT_FILENO);
-//         dup2(devnull, STDERR_FILENO);
-
-//         close(devnull);
-//         while (1) {
-//             pid_t c = fork();
-//             if (c == 0) {
-//                 execl("./simple_stream", "simple_stream", NULL);
-//                 perror("execl failed");
-//                 _exit(1);
-//             }
-//             waitpid(c, NULL, 0);
-//         }
-//     }else if (pid > 0) {
-//         while (now() < until) {
-//             usleep(1000);  
-//         }
-//         kill(pid, SIGKILL);
-//         waitpid(pid, NULL, 0);
-//     }else {
-//         perror("fork failed");
-//     }
-// }
-
-// static void hammer_memory(double until)
-// {
-//     pid_t pid = fork();
-//     if (pid == 0) {
-//         int devnull = open("/dev/null", O_WRONLY);
-//         if (devnull == -1) {
-//             perror("open");
-//             _exit(1);
-//         }
-
-//         dup2(devnull, STDOUT_FILENO);
-//         dup2(devnull, STDERR_FILENO);
-
-//         close(devnull);
-//         setpgid(0, 0);
-//         execl("/bin/sh", "sh", "./run_multiple_no_prints.sh", NULL);
-//         perror("execl failed");
-//         _exit(1);
-//     }
-
-//     else if (pid > 0) {
-//         while (now() < until) {
-//             usleep(1000);  
-//         }
-//         kill(-pid, SIGKILL);
-//         waitpid(pid, NULL, 0);
-//     }
-//     else {
-//         perror("fork failed");
-//     }
-// }
-
 static void hammer_memory(double until) {
-    pid_t pids[2] = {-1, -1};
-    
-    for (int s = 0; s < 2; s++) {
-        pid_t p = fork();
-        if (p == 0) {
-            int dn = open("/dev/null", O_WRONLY);
-            dup2(dn, STDOUT_FILENO); dup2(dn, STDERR_FILENO); close(dn);
-            execl("./simple_stream", "simple_stream", NULL);
-            _exit(1);
-        }
-        pids[s] = p;
-    }
-    
     while (now() < until) {
-        // reap whichever finishes first, replace it
-        for (int s = 0; s < 2; s++) {
-            int status;
-            if (waitpid(pids[s], &status, WNOHANG) == pids[s]) {
-                if (now() >= until) goto done;
-                pid_t p = fork();
-                if (p == 0) {
-                    int dn = open("/dev/null", O_WRONLY);
-                    dup2(dn, STDOUT_FILENO); dup2(dn, STDERR_FILENO); close(dn);
-                    execl("./simple_stream", "simple_stream", NULL);
-                    _exit(1);
-                }
-                pids[s] = p;
-            }
+        pid_t pid = fork();
+        if (pid == 0) {
+            int devnull = open("/dev/null", O_WRONLY);
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+            execl("./simple_stream", "simple_stream", NULL);
+            perror("execl failed");
+            _exit(1);
+        } else if (pid > 0) {
+            waitpid(pid, NULL, 0);
         }
-        usleep(1000);
     }
-done:
-    for (int s = 0; s < 2; s++)
-        if (pids[s] > 0) { kill(pids[s], SIGKILL); waitpid(pids[s], NULL, 0); }
 }
 
 int main(int argc, char *argv[])
