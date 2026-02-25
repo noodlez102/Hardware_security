@@ -40,7 +40,7 @@ static void hammer_memory(double until) {
             // dup2(devnull, STDOUT_FILENO);
             // dup2(devnull, STDERR_FILENO);
             // close(devnull);
-            execl("./run_multiple_no_prints.sh", "run_multiple_no_prints", NULL);
+            execl("./simple_stream", "simple_stream", NULL);
             perror("execl failed");
             _exit(1);
         } else if (pid > 0) {

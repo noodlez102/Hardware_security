@@ -50,15 +50,14 @@ static double wait_for_sync(void)
     fscanf(sf, "%lf", &start_time);
     fclose(sf);
 
-    printf("receiver: sync acquired — bit 0 starts at t=%.3f (now=%.3f)\n\n",
-           start_time, mysecond());
+    printf("receiver: sync acquired — bit 0 starts at t=%.3f (now=%.3f)\n\n", start_time, mysecond());
     fflush(stdout);
     return start_time;
 }
 
 static double run_simple_stream(double window_start)
 {
-    sleep_until(window_start+0.3);
+    sleep_until(window_start+0.1);
     FILE *fp = popen("./simple_stream", "r");
     if (!fp) { perror("popen"); return -1.0; }
 
