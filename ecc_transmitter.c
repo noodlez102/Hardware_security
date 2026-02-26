@@ -66,6 +66,18 @@ static void hammer_memory(double until) {
     }
 }
 
+static char *repetition_encode(const char *bits)
+{
+    int n = strlen(bits);
+    char *encoded = malloc(n * REPETITIONS + 1);
+    if (!encoded) { perror("malloc"); exit(1); }
+    for (int i = 0; i < n; i++)
+        for (int r = 0; r < REPETITIONS; r++)
+            encoded[i * REPETITIONS + r] = bits[i];
+    encoded[n * REPETITIONS] = '\0';
+    return encoded;
+}
+
 int main(int argc, char *argv[])
 {
     const char *bits = NULL;
@@ -77,14 +89,15 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: %s --binary \"01010101...\"\n", argv[0]);
         return 1;
     }
-
+    char *tx_bits;
+    tx_bits = repetition_encode(bits);
     double start_time = floor(mysecond() / 60.0) * 60.0 + 60.0;  //get rid of this and sync up at the nxt minuite or something
 
 
     printf("transmitter: bit 0 starts in ~2s\n");
 
-    for (size_t i = 0; i < strlen(bits); i++) {
-        char bit = bits[i];
+    for (size_t i = 0; i < strlen(tx_bits); i++) {
+        char bit = tx_bits[i];
         double bit_start = start_time + i * BIT_DURATION;
         double bit_end = start_time + (i + 1) * BIT_DURATION;
         

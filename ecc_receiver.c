@@ -137,27 +137,35 @@ int main(int argc, char *argv[])
     if (!received) { fprintf(stderr, "malloc failed\n"); return 1; }
 
     for (int i = 0; i < num_bits; i++) { //implement something that checks current time and if it's current time is ahead of where it should be just mark that bit as x
-        double window_start = start_time + i * BIT_DURATION;
-        double window_end   = window_start + BIT_DURATION;
+        char votes[3];
+        for(int j =0 ; j<3;j++){
+            double window_start = start_time + i * BIT_DURATION+j*BIT_DURATION;
+            double window_end = window_start + BIT_DURATION*(j+1);
 
-        sleep_until(window_start+BIT_DURATION*0.01);
-        if(mysecond() > window_end){
-            printf("receiver: [bit %d] missed window setting to x...\n", i);
-            fflush(stdout);
-            char bit = '0';
-            received[i] = bit;
-        }else{
-            printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
-            fflush(stdout);
+            sleep_until(window_start+BIT_DURATION*0.01);
+            if(mysecond() > window_end){
+                printf("receiver: [bit %d] missed window setting to x...\n", i);
+                fflush(stdout);
+                char bit = '0';
+                received[i] = bit;
+            }else{
+                printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
+                fflush(stdout);
 
-            double bw  = run_simple_stream(window_end-BIT_DURATION*0.05);
-            char   bit = (bw < threshold) ? '1' : '0';
-            received[i] = bit;
+                double bw  = run_simple_stream(window_end-BIT_DURATION*0.05);
+                char   bit = (bw < threshold) ? '1' : '0';
+                vote[j] = bit;
 
-            printf("receiver: bit %2d | Copy rate = %8.0f MB/s | threshold = %.0f | decoded = '%c' \n\n", i, bw, threshold, bit);
-            fflush(stdout);
+
+            }
         }
-
+        int ones = 0;
+        for (int j = 0; j < 3; j++)
+            if (votes[j] == '1') ones++;
+        if (ones > 3 / 2) received[i] = '1';
+        if (ones < 3 / 2) received[i] = '0';
+        printf("receiver: bit %2d| decoded = '%c' \n\n", i, received[i]);
+        fflush(stdout);
     }
     received[num_bits] = '\0';
 
