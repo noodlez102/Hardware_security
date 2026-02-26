@@ -102,11 +102,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    double start_time = mysecond() + 2.0;   //get rid of this and sync up at the nxt minuite or something
-    FILE *sf = fopen(SYNC_FILE, "w");
-    if (!sf) { perror("fopen sync file"); return 1; }
-    fprintf(sf, "%.6f\n", start_time);
-    fclose(sf);
+    double start_time = floor(mysecond() / 60.0) * 60.0 + 60.0;  // next whole minute;   //get rid of this and sync up at the nxt minuite or something
+    // FILE *sf = fopen(SYNC_FILE, "w");
+    // if (!sf) { perror("fopen sync file"); return 1; }
+    // fprintf(sf, "%.6f\n", start_time);
+    // fclose(sf);
 
     printf("transmitter: bit 0 starts in ~2s\n");
 

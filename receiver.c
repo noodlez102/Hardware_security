@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
     }
     fflush(stdout);
 
-    double start_time = wait_for_sync();
+    double start_time = floor(mysecond() / 60.0) * 60.0 + 60.0;;
     
 
     char *received = (char *)malloc(num_bits + 1);
