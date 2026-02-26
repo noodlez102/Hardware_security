@@ -69,12 +69,12 @@ static void hammer_memory(double until) {
 static char *repetition_encode(const char *bits)
 {
     int n = strlen(bits);
-    char *encoded = malloc(n * REPETITIONS + 1);
+    char *encoded = malloc(n * 3 + 1);
     if (!encoded) { perror("malloc"); exit(1); }
     for (int i = 0; i < n; i++)
-        for (int r = 0; r < REPETITIONS; r++)
-            encoded[i * REPETITIONS + r] = bits[i];
-    encoded[n * REPETITIONS] = '\0';
+        for (int r = 0; r < 3; r++)
+            encoded[i * 3 + r] = bits[i];
+    encoded[n * 3] = '\0';
     return encoded;
 }
 
