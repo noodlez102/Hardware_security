@@ -144,21 +144,19 @@ static double run_simple_stream(double until)
 
         close(pipefd[1]);
 
-        /* Wait for child, but kill it if window expires */
         while (1) {
             if (mysecond() >= until) {
                 kill(pid, SIGKILL);
                 waitpid(pid, NULL, 0);
                 close(pipefd[0]);
-                goto done;          /* window over, stop launching */
+                goto done;          
             }
             int   status;
             pid_t r = waitpid(pid, &status, WNOHANG);
-            if (r == pid) break;    /* child finished naturally */
+            if (r == pid) break;    
             usleep(1000);
         }
 
-        /* Drain pipe and parse */
         char    accum[65536];
         int     accum_len = 0;
         char    tmp[4096];
@@ -182,6 +180,7 @@ static double run_simple_stream(double until)
             }
             line = strtok(NULL, "\n");
         }
+        usleep(1000);
     }
 
 done:
