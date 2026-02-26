@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 
     printf("receiver: calibrating baseline (transmitter not yet active)...\n");
     fflush(stdout);
-    double baseline = run_simple_stream(mysecond());
+    double baseline = run_simple_stream(mysecond()+3);
     if (threshold <= 0.0) {
         threshold = baseline * 0.9;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
         printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
         fflush(stdout);
 
-        double bw  = run_simple_stream(window_start);
+        double bw  = run_simple_stream(window_end);
         char   bit = (bw < threshold) ? '1' : '0';
         received[i] = bit;
 
