@@ -147,15 +147,14 @@ int main(int argc, char *argv[])
                 printf("receiver: [bit %d] missed window setting to x...\n", i);
                 fflush(stdout);
                 char bit = '0';
-                received[i] = bit;
+                votes[j] = bit;
             }else{
                 printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
                 fflush(stdout);
 
                 double bw  = run_simple_stream(window_end-BIT_DURATION*0.05);
                 char   bit = (bw < threshold) ? '1' : '0';
-                vote[j] = bit;
-
+                votes[j] = bit;
 
             }
         }
