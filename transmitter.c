@@ -63,6 +63,10 @@ static void hammer_memory(double until) {
         pid_t pid = fork();
 
         if (pid == 0) {
+            int devnull = open("/dev/null", O_WRONLY);
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
             execl("./simple_stream", "simple_stream", NULL);
             perror("execl failed");
             _exit(1);
@@ -75,12 +79,12 @@ static void hammer_memory(double until) {
                 if (mysecond() >= until) {
                     kill(pid, SIGKILL);
                     waitpid(pid, NULL, 0);
-                    return;  // time expired → stop entirely
+                    return; 
                 }
 
                 pid_t result = waitpid(pid, &status, WNOHANG);
                 if (result == pid) {
-                    break;  // child finished normally → start next
+                    break; 
                 }
             }
         }

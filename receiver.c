@@ -55,32 +55,67 @@ static double wait_for_sync(void) //get rid of this and wait for the nxt minute
     return start_time;
 }
 
-static double run_simple_stream(double window_start) //mess around with boundries to get the exact size of the cache. and use that cache to run ntimes measurements
+// static double run_simple_stream(double window_start) //mess around with boundries to get the exact size of the cache. and use that cache to run ntimes measurements
+// {
+//     sleep_until(window_start+0.001);
+//     double begin =mysecond();
+//     FILE *fp = popen("./simple_stream", "r");
+//     if (!fp) { perror("popen"); return -1.0; }
+
+//     char   line[512];
+//     double bw = -1.0;
+
+//     while (fgets(line, sizeof(line), fp)) {
+//         if (strncmp(line, "Copy:", 5) == 0) {
+//             char *p = line + 5;
+//             while (*p == ' ' || *p == '\t') p++;
+//             bw = atof(p);
+//         }
+//     }
+
+//     pclose(fp);
+//     printf("took %.3f to run and get bw\n", mysecond()-begin);
+//     fflush(stdout);
+//     if (bw < 0.0) {
+//         fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
+//         bw = 0.0;
+//     }
+//     return bw;
+// }
+
+static double run_simple_stream(double until)
 {
-    sleep_until(window_start+0.001);
-    double begin =mysecond();
-    FILE *fp = popen("./simple_stream", "r");
-    if (!fp) { perror("popen"); return -1.0; }
+    double total_bw = 0.0;
+    int count = 0;
 
-    char   line[512];
-    double bw = -1.0;
+    while (mysecond() < until) {
+        FILE *fp = popen("./simple_stream", "r");
+        if (!fp) {
+            perror("popen");
+            return -1.0;
+        }
 
-    while (fgets(line, sizeof(line), fp)) {
-        if (strncmp(line, "Copy:", 5) == 0) {
-            char *p = line + 5;
-            while (*p == ' ' || *p == '\t') p++;
-            bw = atof(p);
+        char line[512];
+        double bw = -1.0;
+
+        while (fgets(line, sizeof(line), fp)) {
+            if (strncmp(line, "Copy:", 5) == 0) {
+                sscanf(line, "%*s %lf", &bw);
+            }
+        }
+
+        pclose(fp);
+
+        if (bw > 0.0) {
+            total_bw += bw;
+            count++;
         }
     }
 
-    pclose(fp);
-    printf("took %.3f to run and get bw\n", mysecond()-begin);
-    fflush(stdout);
-    if (bw < 0.0) {
-        fprintf(stderr, "receiver: WARNING - could not parse Copy: line\n");
-        bw = 0.0;
-    }
-    return bw;
+    if (count == 0)
+        return 0.0;
+
+    return total_bw / count;
 }
 
 int main(int argc, char *argv[])
