@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 
     printf("receiver: calibrating baseline (transmitter not yet active)...\n");
     fflush(stdout);
-    double baseline = run_simple_stream(mysecond()+3);
+    double baseline = run_simple_stream(mysecond()+2);
     if (threshold <= 0.0) {
         threshold = baseline * 0.9;
         printf("receiver: baseline = %.0f MB/s  =>  threshold = %.0f MB/s\n\n",
@@ -214,8 +214,7 @@ int main(int argc, char *argv[])
 
     double start_time = wait_for_sync();
     
-    // sleep_until(start_time - 0.5);
-    // run_simple_stream(mysecond());
+
     char *received = (char *)malloc(num_bits + 1);
     if (!received) { fprintf(stderr, "malloc failed\n"); return 1; }
 
@@ -224,18 +223,24 @@ int main(int argc, char *argv[])
         double window_end   = window_start + BIT_DURATION;
 
         sleep_until(window_start+0.01);
-        printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
-        fflush(stdout);
+        if(mysecond() > window_end){
+            printf("receiver: [bit %d] missed window setting to x...\n", i);
+            fflush(stdout);
+            char   bit = 'x';
+            received[i] = bit;
+        }else{
+            printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
+            fflush(stdout);
 
-        double bw  = run_simple_stream(window_end-0.05);
-        char   bit = (bw < threshold) ? '1' : '0';
-        received[i] = bit;
+            double bw  = run_simple_stream(window_end-0.05);
+            char   bit = (bw < threshold) ? '1' : '0';
+            received[i] = bit;
 
 
-        printf("receiver: bit %2d | Copy rate = %8.0f MB/s | threshold = %.0f | decoded = '%c' \n\n", i, bw, threshold, bit);
-        fflush(stdout);
+            printf("receiver: bit %2d | Copy rate = %8.0f MB/s | threshold = %.0f | decoded = '%c' \n\n", i, bw, threshold, bit);
+            fflush(stdout);
+        }
 
-        //sleep_until(window_end);
     }
     received[num_bits] = '\0';
 
