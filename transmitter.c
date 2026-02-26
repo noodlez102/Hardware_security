@@ -10,7 +10,7 @@
 #include <sys/time.h>
 
 #define SYNC_FILE    "/tmp/covert_start"
-#define BIT_DURATION 10.0  
+#define BIT_DURATION 1.0  
 
 double mysecond()
 {
@@ -81,7 +81,6 @@ static void hammer_memory(double until) {
                     waitpid(pid, NULL, 0);
                     return; 
                 }
-
                 pid_t result = waitpid(pid, &status, WNOHANG);
                 if (result == pid) {
                     break; 
