@@ -83,39 +83,111 @@ static double wait_for_sync(void) //get rid of this and wait for the nxt minute
 //     return bw;
 // }
 
+// static double run_simple_stream(double until)
+// {
+//     double total_bw = 0.0;
+//     int count = 0;
+
+//     while (mysecond() < until) {
+//         FILE *fp = popen("./simple_stream", "r");
+//         if (!fp) {
+//             perror("popen");
+//             return -1.0;
+//         }
+
+//         char line[512];
+//         double bw = -1.0;
+
+//         while (fgets(line, sizeof(line), fp)) {
+//             if (strncmp(line, "Copy:", 5) == 0) {
+//                 sscanf(line, "%*s %lf", &bw);
+//             }
+//         }
+
+//         pclose(fp);
+
+//         if (bw > 0.0) {
+//             total_bw += bw;
+//             count++;
+//         }
+//     }
+
+//     if (count == 0)
+//         return 0.0;
+
+//     return total_bw / count;
+// }
+
 static double run_simple_stream(double until)
 {
-    double total_bw = 0.0;
-    int count = 0;
+    double sum   = 0.0;
+    int    count = 0;
 
     while (mysecond() < until) {
-        FILE *fp = popen("./simple_stream", "r");
-        if (!fp) {
-            perror("popen");
-            return -1.0;
+        int pipefd[2];
+        if (pipe(pipefd) == -1) { perror("pipe"); break; }
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            close(pipefd[0]);
+            dup2(pipefd[1], STDOUT_FILENO);
+            dup2(pipefd[1], STDERR_FILENO);
+            close(pipefd[1]);
+            execl("./simple_stream", "simple_stream", NULL);
+            perror("execl");
+            _exit(1);
+        } else if (pid < 0) {
+            perror("fork");
+            close(pipefd[0]); close(pipefd[1]);
+            break;
         }
 
-        char line[512];
-        double bw = -1.0;
+        close(pipefd[1]);
 
-        while (fgets(line, sizeof(line), fp)) {
-            if (strncmp(line, "Copy:", 5) == 0) {
-                sscanf(line, "%*s %lf", &bw);
+        /* Wait for child, but kill it if window expires */
+        while (1) {
+            if (mysecond() >= until) {
+                kill(pid, SIGKILL);
+                waitpid(pid, NULL, 0);
+                close(pipefd[0]);
+                goto done;          /* window over, stop launching */
+            }
+            int   status;
+            pid_t r = waitpid(pid, &status, WNOHANG);
+            if (r == pid) break;    /* child finished naturally */
+            usleep(1000);
+        }
+
+        /* Drain pipe and parse */
+        char    accum[65536];
+        int     accum_len = 0;
+        char    tmp[4096];
+        ssize_t n;
+        while ((n = read(pipefd[0], tmp, sizeof(tmp) - 1)) > 0) {
+            if (accum_len + n < (int)sizeof(accum) - 1) {
+                memcpy(accum + accum_len, tmp, n);
+                accum_len += n;
             }
         }
+        close(pipefd[0]);
 
-        pclose(fp);
-
-        if (bw > 0.0) {
-            total_bw += bw;
-            count++;
+        accum[accum_len] = '\0';
+        char *line = strtok(accum, "\n");
+        while (line) {
+            if (strncmp(line, "Copy:", 5) == 0) {
+                char *p = line + 5;
+                while (*p == ' ' || *p == '\t') p++;
+                double bw = atof(p);
+                if (bw > 0.0) { sum += bw; count++; }
+            }
+            line = strtok(NULL, "\n");
         }
     }
 
-    if (count == 0)
-        return 0.0;
-
-    return total_bw / count;
+done:
+    if (count == 0) return 0.0;
+    printf("receiver: averaged %d sample(s)\n", count);
+    return sum / count;
 }
 
 int main(int argc, char *argv[])
@@ -156,7 +228,7 @@ int main(int argc, char *argv[])
         printf("receiver: [bit %d] window open, running simple_stream at time = %.3f...\n", i, mysecond());
         fflush(stdout);
 
-        double bw  = run_simple_stream(window_end);
+        double bw  = run_simple_stream(window_end-0.05);
         char   bit = (bw < threshold) ? '1' : '0';
         received[i] = bit;
 

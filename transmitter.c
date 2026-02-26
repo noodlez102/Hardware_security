@@ -90,6 +90,7 @@ static void hammer_memory(double until) {
         }
     }
 }
+
 int main(int argc, char *argv[])
 {
     const char *bits = NULL;
