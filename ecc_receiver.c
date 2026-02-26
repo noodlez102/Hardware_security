@@ -12,7 +12,7 @@
 #include <math.h>
 
 #define SYNC_FILE    "/tmp/covert_start"
-#define BIT_DURATION 0.1
+#define BIT_DURATION 0.001
 #define DEFAULT_BITS 16
 
 double mysecond()
