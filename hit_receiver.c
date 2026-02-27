@@ -33,10 +33,13 @@ int main(int argc, char *argv[]) {
     mfence();
 
     usleep(500000);  
-
-    size_t delta = repeat_hit((void*)Y);
-
-    printf("Measured time: %lu\n", delta);
+    double avg =0;
+    for(int i=0; i< 1024*16; i++){
+        size_t delta = repeat_hit((void*)Y);
+        avg+=delta;
+    }
+    avg=avg/(1024*16);
+    printf("Measured time: %lu\n", avg);
 
     if (delta > THRESHOLD) {
         printf("Decoded bit: 1\n");
