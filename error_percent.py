@@ -13,10 +13,10 @@ NUM_BITS = 512
 random.seed()
 transmitted = ''.join(random.choice('01') for _ in range(NUM_BITS))
 
-rx_cmd = ["./receiver", "--bits", str(NUM_BITS)]
+rx_cmd = ["./ecc_receiver", "--bits", str(NUM_BITS)]
 
 
-tx_cmd = ["./transmitter", "--binary", transmitted]
+tx_cmd = ["./ecc_transmitter", "--binary", transmitted]
 
 print("[eval] Starting receiver...")
 rx_proc = subprocess.Popen(rx_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
