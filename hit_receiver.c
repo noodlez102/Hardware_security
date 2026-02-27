@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 
     size_t bufsize = WAYS * C + 64;
     uint8_t *buf = aligned_alloc(64, bufsize);
+
     if (!buf) {
         perror("alloc");
         return 1;
@@ -42,18 +43,17 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < WAYS; i++)
         evset[i] = buf + i * C;
 
-
     double avg =0;
     for(int i=0; i< 1024*16; i++){
         for (int j = 0; j < WAYS; i++){
-            size_t delta = repeat_hit(evset[j]);
+            printf("at iteration %f %f\n",i,j)''
+            size_t delta = repeat_hit((void*)evset[j]);
             avg+=delta;
         }
-            
     }
 
     avg=avg/(1024*16);
-    printf("Measured time: %lu\n", avg);
+    printf("Measured time: %f\n", avg);
 
     if (avg > THRESHOLD) {
         printf("Decoded bit: 1\n");
