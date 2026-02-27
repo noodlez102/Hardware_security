@@ -44,13 +44,12 @@ int main(int argc, char *argv[]) {
         evset[i] = buf + i * C;
 
     double avg =0;
-    for(int i=0; i< 1024*16; i++){
-        for (int j = 0; j < WAYS; i++){
-            printf("at iteration %f %f\n",i,j)''
-            size_t delta = repeat_hit((void*)evset[j]);
-            avg+=delta;
-        }
+    
+    for(int i=0; i< 1024; i++){
+        size_t delta = repeat_hit((void*)evset[0]);
+        avg+=delta;
     }
+    
 
     avg=avg/(1024*16);
     printf("Measured time: %f\n", avg);
