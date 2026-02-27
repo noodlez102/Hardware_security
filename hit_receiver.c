@@ -1,8 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
+#include <x86intrin.h>
 #include <unistd.h>
 #include "cacheutils.h"
+#include <sys/time.h>
+#include <time.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <math.h>
 
 #ifndef N
 #define N 1
@@ -32,7 +39,7 @@ int main(int argc, char *argv[]) {
     maccess((void*)Y);
 
     usleep(500000);  
-    
+
     double avg =0;
     for(int i=0; i< 1024*16; i++){
         size_t delta = repeat_hit((void*)Y);

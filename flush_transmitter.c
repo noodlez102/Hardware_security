@@ -5,6 +5,11 @@
 #include <x86intrin.h>
 #include <unistd.h>
 #include "cacheutils.h"
+#include <sys/time.h>
+#include <time.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <math.h>
 
 #define WAYS 12
 #define C (2 * 1024 * 1024)   // 2 MiB
