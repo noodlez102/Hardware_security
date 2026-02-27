@@ -8,6 +8,17 @@
 
 #define WAYS 12
 #define C (2 * 1024 * 1024)   // 2 MiB
+#define DURATION 5.0
+
+double mysecond()
+{
+        struct timeval tp;
+        struct timezone tzp;
+        int i;
+
+        i = gettimeofday(&tp,&tzp);
+        return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
+}
 
 int main(int argc, char *argv[]) {
 
@@ -37,11 +48,12 @@ int main(int argc, char *argv[]) {
         evset[i] = buf + i * C;
 
     printf("Transmitting bit %d...\n", bit);
-
-    while (1) {
+    double end =mysecond() + DURATION;
+    while (mysecond() > end) {
         if (bit == 1) {
             for (int i = 0; i < WAYS; i++)
-            flush((void*)evset[i]);
+                flush((void*)evset[i]);
+                usleep(500000);  
         }else{
             usleep(500000);  
         }

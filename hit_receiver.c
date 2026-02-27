@@ -30,18 +30,19 @@ int main(int argc, char *argv[]) {
     volatile uint8_t *Y = buf;
 
     maccess((void*)Y);
-    mfence();
 
     usleep(500000);  
+    
     double avg =0;
     for(int i=0; i< 1024*16; i++){
         size_t delta = repeat_hit((void*)Y);
         avg+=delta;
     }
+
     avg=avg/(1024*16);
     printf("Measured time: %lu\n", avg);
 
-    if (delta > THRESHOLD) {
+    if (avg > THRESHOLD) {
         printf("Decoded bit: 1\n");
     } else {
         printf("Decoded bit: 0\n");
