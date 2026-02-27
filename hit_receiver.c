@@ -5,10 +5,10 @@
 #include "cacheutils.h"
 
 #ifndef N
-#define N 100000
+#define N 1
 #endif
 
-#define THRESHOLD 2000   // <-- you MUST calibrate this
+#define THRESHOLD 2000 
 
 size_t repeat_hit(void* addr) {
     size_t time = rdtsc();

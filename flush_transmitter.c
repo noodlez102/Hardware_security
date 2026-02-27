@@ -41,7 +41,9 @@ int main(int argc, char *argv[]) {
     while (1) {
         if (bit == 1) {
             for (int i = 0; i < WAYS; i++)
-                flush((void*)evset[i]);
+            flush((void*)evset[i]);
+        }else{
+            usleep(500000);  
         }
     }
 
