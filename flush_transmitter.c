@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
     printf("Transmitting bit %d...\n", bit);
     double end =mysecond() + DURATION;
-    while (mysecond() > end) {
+    while (mysecond() < end) {
         if (bit == 1) {
             for (int i = 0; i < WAYS; i++)
                 flush((void*)evset[i]);

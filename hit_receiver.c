@@ -15,7 +15,9 @@
 #define N 1
 #endif
 
-#define THRESHOLD 2000 
+#define WAYS 12
+#define C (2 * 1024 * 1024)   // 2 MiB
+#define THRESHOLD 29
 
 size_t repeat_hit(void* addr) {
     size_t time = rdtsc();
@@ -28,22 +30,26 @@ size_t repeat_hit(void* addr) {
 
 int main(int argc, char *argv[]) {
 
-    uint8_t *buf = aligned_alloc(64, 64);
+    size_t bufsize = WAYS * C + 64;
+    uint8_t *buf = aligned_alloc(64, bufsize);
     if (!buf) {
         perror("alloc");
         return 1;
     }
 
-    volatile uint8_t *Y = buf;
+    volatile uint8_t *evset[WAYS];
 
-    maccess((void*)Y);
+    for (int i = 0; i < WAYS; i++)
+        evset[i] = buf + i * C;
 
-    usleep(500000);  
 
     double avg =0;
     for(int i=0; i< 1024*16; i++){
-        size_t delta = repeat_hit((void*)Y);
-        avg+=delta;
+        for (int j = 0; j < WAYS; i++){
+            size_t delta = repeat_hit(evset[j]);
+            avg+=delta;
+        }
+            
     }
 
     avg=avg/(1024*16);
