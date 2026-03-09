@@ -18,7 +18,8 @@ module arbiter_puf #(
     for (r = 0; r < R_BITS; r = r + 1) begin : CHAINS
       challenge_cycle #(
           .C_BITS (C_BITS),
-          .DELAY  (Delay)
+          .R_BITS (R_BITS),
+          .DELAY  (DELAY)
       ) challenge_chains(
           .reset     (reset),
           .enable    (enable),
