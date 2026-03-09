@@ -17,14 +17,14 @@ generate
         assign top[0] = enable;
         assign bottom[0] = enable;
 
-        mux #(.DELAY(DELAY)) mux_top (
+        mux #(.DELAY(DELAY[4*(MUX_INDEX+1)-1 -: 4])) mux_top (
         .a   (top[r]),
         .b   (bottom[r]),
         .sel (challenge[r]),
         .out (top[r+1])
         );
 
-        mux #(.DELAY(DELAY)) mux_bot (
+        mux #(.DELAY(DELAY[4*(MUX_INDEX+2)-1 -: 4])) mux_bot (
         .a   (bottom[r]),
         .b   (top[r]),
         .sel (challenge[r]),
