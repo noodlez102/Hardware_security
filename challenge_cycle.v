@@ -11,22 +11,23 @@ module challenge_cycle #(
         
 wire [C_BITS:0] top;
 wire [C_BITS:0] bottom;
+    
+assign top[0] = enable;
+assign bottom[0] = enable;
 
 genvar r;
 generate
     for (r = 0; r < C_BITS; r = r + 1) begin : STAGES
-    
-        assign top[0] = enable;
-        assign bottom[0] = enable;
 
-        mux #(.DELAY(DELAY[4*(r+1)-1 -: 4])) mux_top (
+
+        mux #(.DELAY(DELAY[4*(2*r+1)-1 -: 4])) mux_top (
         .a   (top[r]),
         .b   (bottom[r]),
         .sel (challenge[r]),
         .out (top[r+1])
         );
 
-        mux #(.DELAY(DELAY[4*(r+2)-1 -: 4])) mux_bot (
+        mux #(.DELAY(DELAY[4*(2*r+2)-1 -: 4])) mux_bot (
         .a   (bottom[r]),
         .b   (top[r]),
         .sel (challenge[r]),
