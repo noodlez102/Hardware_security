@@ -9,11 +9,11 @@ module challenge_cycle #(
   output reg resp       // The PUF response output
 );
         
-wire top;
-wire bottom;
+wire [C_BITS-1:0] top;
+wire [C_BITS-1:0] bottom;
     
-assign top = enable;
-assign bottom = enable;
+assign top[0] = enable;
+assign bottom[0] = enable;
 
 genvar r;
 generate
@@ -21,26 +21,26 @@ generate
 
 
         mux #(.DELAY(DELAY[4*(2*r+1)-1 -: 4])) mux_top (
-        .a   (top),
-        .b   (bottom),
+        .a   (top[r]),
+        .b   (bottom[r]),
         .sel (challenge[r]),
-        .out (top)
+        .out (top[r+1])
         );
 
         mux #(.DELAY(DELAY[4*(2*r+2)-1 -: 4])) mux_bot (
-        .a   (bottom),
-        .b   (top),
+        .a   (bottom[r]),
+        .b   (top[r]),
         .sel (challenge[r]),
-        .out (bottom)
+        .out (bottom[r+1])
         );
     end
 endgenerate
 
-always @(posedge bottom or posedge reset) begin
+always @(posedge bottom[C_BITS] or posedge reset) begin
     if (reset)
       resp <= 1'b0;
     else
-      resp <= top;
+      resp <= top[C_BITS];
 end
 
 endmodule
