@@ -1,7 +1,10 @@
-module tb_challenge_cycle();
+module tb_harvest_crp();
+//-----------------------------------------------------------------------------
+// Your Code Here
+//-----------------------------------------------------------------------------
 
 parameter C_BITS = 4;
-parameter R_BITS = 1;
+parameter R_BITS = 32;
 
 
 `include "delay_params.v"
@@ -13,9 +16,9 @@ wire [R_BITS-1:0] resp;
 
 integer i;
 
-challenge_cycle #(
+arbiter_puf #(
   .C_BITS(C_BITS),
-  .R_BITS(4),
+  .R_BITS(R_BITS),
   .DELAY(DELAY)
 ) DUT_A (
   .reset(reset),
@@ -63,7 +66,6 @@ initial begin
 // Add more test cases here.
 //-----------------------------------------------------------------------------
 
-
     for (i = 0; i < (1<<C_BITS); i = i + 1) begin
         gen_crp(i);
     end
@@ -71,5 +73,5 @@ initial begin
 //-----------------------------------------------------------------------------
   $stop;
 end
-
+//-----------------------------------------------------------------------------
 endmodule
