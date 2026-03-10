@@ -1,7 +1,6 @@
 module challenge_cycle #(
   parameter C_BITS = 4, // Challenge Bits
-  parameter R_BITS = 4, // Response Bits
-  parameter [2*4*C_BITS*R_BITS-1:0] DELAY = 4'd12 // Random Delay Values
+  parameter [8*C_BITS-1:0] DELAY = 4'd12 // Random Delay Values
 ) (
   input               reset,     // Active-high reset to set all registers to 0
   input               enable,    // Enable the PUF circuit
@@ -9,8 +8,8 @@ module challenge_cycle #(
   output reg resp       // The PUF response output
 );
         
-wire [C_BITS-1:0] top;
-wire [C_BITS-1:0] bottom;
+wire [C_BITS:0] top;
+wire [C_BITS:0] bottom;
     
 assign top[0] = enable;
 assign bottom[0] = enable;
