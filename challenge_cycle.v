@@ -15,8 +15,7 @@ wire [C_BITS:0] bottom;
 genvar r;
 generate
     for (r = 0; r < C_BITS; r = r + 1) begin : STAGES
-
-
+    
         assign top[0] = enable;
         assign bottom[0] = enable;
 
