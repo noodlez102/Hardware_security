@@ -5,7 +5,7 @@ module tb_RO_basic();
   reg  Enable, clock;
   wire RO_out;
 
-  RO_basic_sim dut (
+  RO_basic_testable dut (
     .Enable(Enable),
     .RO_out(RO_out)
   );
@@ -15,6 +15,8 @@ module tb_RO_basic();
   initial begin
     #10
     Enable= 1'b1;
+    #100
+    Enable= 1'b0;
     #100
     $stop;
   end
