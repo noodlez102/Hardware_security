@@ -13,6 +13,7 @@ module tb_RO_basic();
   always #5 clock=~clock;
 
   initial begin
+    clock = 1'b1;
     #10
     Enable= 1'b1;
     #100
