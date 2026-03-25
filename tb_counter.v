@@ -29,10 +29,10 @@ module tb_counter_group();
         reset = 0;
         Cha0 = 0;
         Cha1 = 1;
-        #20000
+        #200
         Cha0 = 2;
         Cha1 = 3;
-        #20000
+        #200
         $stop;
     end
 endmodule
