@@ -1,9 +1,9 @@
-/** @module : tb_netlist_A
+/** @module : tb_mm_uart
  *  @author : Secure, Trusted, and Assured Microelectronics (STAM) Center
  *  Copyright (c) 2022 (STAM/SCAI/ASU)
  */
 
-module tb_netlist_A();
+module tb_netlist_A ();
 
 localparam DATA_WIDTH         = 8;
 localparam ADDR_WIDTH         = 8;
@@ -147,13 +147,7 @@ always #50 clock_baud = ~clock_baud;
 
 initial begin
   initialize;
-  inactive(10);
-
-  //-----------------------------------------------------------//
-  // Write your test code here.
-  //-----------------------------------------------------------//
-
-
+  inactive(100);
   test_init;
   inactive(100);
   test_tx;
@@ -289,10 +283,5 @@ begin
   $stop;
 end
 endtask
-
-  //-----------------------------------------------------------//
-end
-
-
 
 endmodule
