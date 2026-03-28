@@ -154,6 +154,9 @@ initial begin
   inactive(100);
   test_rx;
   inactive(100);
+  test_tx;
+  inactive(100);
+  test_rx;
   test_exit;
 end
 
@@ -265,7 +268,6 @@ begin
         reg_read_rx;
         count = count + 1;
       end
-
       disable wait_rx_timeout;
     end
   join
