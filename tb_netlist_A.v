@@ -230,16 +230,14 @@ begin
 end
 endtask
 
-
 task test_rx;
+  integer count;   // ✅ declare at top of task
 begin
   uart_rx = 1'b1;
 
   inactive(1);
 
   // write to RX DATA
-  // data should read 'testing!'
-
   rx_data('d84);
   rx_data('d69);
   rx_data('d83);
@@ -251,31 +249,27 @@ begin
 
   delay(100);
 
-  // we should see 10 entries in fifo
-integer count;
-count = 0;
+  count = 0;   // ✅ assignment is fine here
 
-// give time for RX logic to push into FIFO
-delay(100);
+  // give time for RX logic
+  delay(100);
 
-fork : wait_rx_timeout
-  begin
-    #10_000;
-    $display ("timeout error waiting for rx data");
-    $stop;
-  end
-  begin
-    // try to read 8 entries
-    repeat (8) begin
-      reg_read_rx;
-      count = count + 1;
+  fork : wait_rx_timeout
+    begin
+      #10_000;
+      $display ("timeout error waiting for rx data");
+      $stop;
     end
+    begin
+      repeat (8) begin
+        reg_read_rx;
+        count = count + 1;
+      end
 
-    disable wait_rx_timeout;
-  end
-join
+      disable wait_rx_timeout;
+    end
+  join
 
-  // check we got exactly 8
   if (count !== 8) begin
     $display("ERROR :: expected 8 RX entries, got %0d", count);
     $stop;
@@ -283,6 +277,7 @@ join
     $display("found expected number of RX entries");
   end
 
+end
 endtask
 
 task test_exit;
