@@ -154,6 +154,10 @@ initial begin
   inactive(100);
   test_rx;
   inactive(100);
+  test_tx;
+  inactive(100);
+  test_rx;
+  inactive(100);
   test_exit;
 end
 
