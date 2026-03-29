@@ -28,7 +28,7 @@ wire [DATA_WIDTH-1:0] readData;
 wire                  ready;
 
 //Loopback tx --> rx
-assign uart_rx = uart_tx;
+//assign uart_rx = uart_tx;
 
 //define the log2 function
 function integer log2;
@@ -231,25 +231,25 @@ end
 endtask
 
 task test_rx;
-  integer count;  
+  integer count;   // ✅ declare at top of task
 begin
-  //uart_rx = 1'b1;
+  uart_rx = 1'b1;
 
   inactive(1);
 
   // write to RX DATA
-  //rx_data('d84);
- // rx_data('d69);
-  //rx_data('d83);
-  //rx_data('d84);
- // rx_data('d73);
-  //rx_data('d78);
-  //rx_data('d71);
-  //rx_data('d33);
+  rx_data('d84);
+  rx_data('d69);
+  rx_data('d83);
+  rx_data('d84);
+  rx_data('d73);
+  rx_data('d78);
+  rx_data('d71);
+  rx_data('d33);
 
   delay(100);
 
-  count = 0;  
+  count = 0;   // ✅ assignment is fine here
 
   // give time for RX logic
   delay(100);
