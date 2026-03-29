@@ -3,7 +3,7 @@
  *  Copyright (c) 2022 (STAM/SCAI/ASU)
  */
 
-module tb_netlist_A ();
+module tb_mm_uart ();
 
 localparam DATA_WIDTH         = 8;
 localparam ADDR_WIDTH         = 8;
@@ -28,7 +28,7 @@ wire [DATA_WIDTH-1:0] readData;
 wire                  ready;
 
 //Loopback tx --> rx
-assign uart_rx = uart_tx;
+//assign uart_rx = uart_tx;
 
 //define the log2 function
 function integer log2;
@@ -190,7 +190,7 @@ begin
       $stop;
     end
     begin
-      repeat(510) @(posedge clock);
+      wait(DUT.TX_FIFO.empty === 1'b1) ;
       disable wait_tx_timeout;
       // wait for last tx transaction
       repeat(11) @(posedge clock);
@@ -230,52 +230,50 @@ begin
 end
 endtask
 
+
 task test_rx;
-  integer count;  
 begin
-  //uart_rx = 1'b1;
+  uart_rx = 1'b1;
 
   inactive(1);
 
   // write to RX DATA
-  //rx_data('d84);
- // rx_data('d69);
-  //rx_data('d83);
-  //rx_data('d84);
- // rx_data('d73);
-  //rx_data('d78);
-  //rx_data('d71);
-  //rx_data('d33);
+  // data should read 'testing!'
+
+  rx_data('d84);
+  rx_data('d69);
+  rx_data('d83);
+  rx_data('d84);
+  rx_data('d73);
+  rx_data('d78);
+  rx_data('d71);
+  rx_data('d33);
 
   delay(100);
 
-  count = 0;  
-
-  // give time for RX logic
-  delay(100);
-
+  // we should see 10 entries in fifo
+  if (DUT.RX_FIFO.size !== 8'd8) begin
+    $display ("ERROR :: rx fifo has 'd%0d entries, expected 8",DUT.RX_FIFO.size);
+    $stop;
+  end
+  else begin
+    $display ("found expected number in rx fifo");
+  end
+  //expected to be popping bytes off the fifo
   fork : wait_rx_timeout
     begin
-      #10_000;
+      #10_000; //#10ns
       $display ("timeout error waiting for rx data");
       $stop;
     end
     begin
-      repeat (8) begin
+      while (DUT.RX_FIFO.empty !== 'b1) begin
         reg_read_rx;
-        count = count + 1;
       end
       disable wait_rx_timeout;
+      $display ("rx fifo is empty !");
     end
   join
-
-  if (count !== 8) begin
-    $display("ERROR :: expected 8 RX entries, got %0d", count);
-    $stop;
-  end else begin
-    $display("found expected number of RX entries");
-  end
-
 end
 endtask
 
