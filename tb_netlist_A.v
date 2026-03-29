@@ -194,7 +194,7 @@ begin
       $stop;
     end
     begin
-      repeat(510) @(posedge clock);
+      repeat(610) @(posedge clock);
       disable wait_tx_timeout;
       // wait for last tx transaction
       repeat(11) @(posedge clock);
