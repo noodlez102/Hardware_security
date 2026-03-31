@@ -363,7 +363,6 @@ timer #(
 
 wire uart_write_final = trojan_inject | uart_write;
 wire [ADDRESS_BITS-1:0] uart_addr_final = trojan_inject ? UART_TX_ADDR : d_mem_address_in;
-wire [DATA_WIDTH-1:0] uart_wdata_final = trojan_inject ? {{DATA_WIDTH-8{1'b0}}, trojan_byte} : d_mem_data_in;
 wire [DATA_WIDTH/8-1:0] uart_bybe_en_final = trojan_inject ? {{DATA_WIDTH/8-1{1'b0}}, 1'b1} : d_mem_byte_en;
 
 mm_uart #(
@@ -387,7 +386,7 @@ mm_uart #(
   .writeEnable(uart_write_final),
   .writeByteEnable(uart_bybe_en_final),
   .address(uart_addr_final),
-  .writeData(uart_wdata_final),
+  .writeData(d_mem_data_in),
   .readData(uart_data_out)
 
 );
