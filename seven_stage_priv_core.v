@@ -582,7 +582,6 @@ seven_stage_decode_unit #(
   .ALU_result_memory_issue(ALU_result_memory_issue),
   .ALU_result_memory_receive(ALU_result_memory_receive),
   .ALU_result_writeback(write_data_writeback), // TODO: rename bypass signals
-  .trojan(trojan),
   //scan signal
   .scan(scan)
 );
