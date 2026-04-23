@@ -27,7 +27,7 @@ vector<vector<int64_t>> generateMatrix(int height, int width) {
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            mat[i][j] = rand() % 101;
+            mat[i][j] = rand() % 100 + 1;
         }
     }
 
@@ -49,6 +49,20 @@ vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
     return mat;
 }
 
+vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
+    int height = matrix.size();
+    int width = matrix[0].size();
+
+    vector<vector<int64_t>> mat(height, vector<int64_t>(width));
+
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            mat[i][j] = matrix[j][(i)];
+        }
+    }
+
+    return mat;
+}
 
 void printMatrix(const vector<vector<int64_t>>& mat) {
     for (const auto& row : mat) {
@@ -122,15 +136,18 @@ int main(int argc, char* argv[]) {
     // vector<int64_t> vec_vals = parsemat(argv[2]);
     vector<vector<int64_t>> matrix = generateMatrix(HeightA, WidthA);
     vector<vector<int64_t>> vecMatrix = generateMatrix(HeightB, WidthB);
+    vector<vector<int64_t>> rotatedVecMatrix = rotateMatrix(vecMatrix);
     cout << "Matrix A:\n";
     printMatrix(matrix);
     cout << "\nMatrix B:\n";
     printMatrix(vecMatrix);
+    cout << "\nMatrix B but rotated:\n";
+    printMatrix(rotatedVecMatrix);
     vector<vector<int64_t>> reorderedMatrix = getDiagonals(matrix);
     cout<< "got through geting diagonals"<<endl;
     cout << "\nMatrix diagonal:\n";
     printMatrix(reorderedMatrix);
-    vector<vector<int64_t>> Real_Answer = multiplyMatrix(matrix,vecMatrix);
+    vector<vector<int64_t>> Real_Answer = multiplyMatrix(matrix, vecMatrix);
     cout<< "got through geting real answer"<<endl;
 
     vector<Plaintext> plaintextsMatrix;
@@ -139,7 +156,7 @@ int main(int argc, char* argv[]) {
     
     // First plaintext vector is encoded
     for(int i = 0; i < WidthB; i++){
-        auto pt = cryptoContext->MakePackedPlaintext(vecMatrix[i]);
+        auto pt = cryptoContext->MakePackedPlaintext(rotatedVecMatrix[i]);
         plaintextVector.push_back(pt);
         cout << "plain text of vector: "<< pt;
     }
@@ -149,7 +166,7 @@ int main(int argc, char* argv[]) {
         auto pt = cryptoContext->MakePackedPlaintext(reorderedMatrix[i]);
 
         plaintextsMatrix.push_back(cryptoContext->MakePackedPlaintext(reorderedMatrix[i]));
-        cout << "plain text of matrix: "<< pt;
+        cout << "plain text of matrix: "<< pt <<endl;
     }
     cout <<endl;
 
@@ -175,8 +192,8 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < WidthB; i++){
         Ciphertext<DCRTPoly> total;
         bool first = true;
-        for(int j = 0; j< HeightB; j++){
-            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j);
+        for(int j = 0; j < HeightB; j++){
+            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], HeightB - j);
             auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextMulrot);
             cipherMult.push_back(ciphertextMultResult);
             if (first) {
