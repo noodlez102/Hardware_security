@@ -120,8 +120,8 @@ int main(int argc, char* argv[]) {
     //generate random inputs and print them out
     // vector<int64_t> mat_vals = parsemat(argv[1]);
     // vector<int64_t> vec_vals = parsemat(argv[2]);
-    vector<vector<int64_t>> matrix = generateMatrix(WidthA, HeightA);
-    vector<vector<int64_t>> vecMatrix = generateMatrix(WidthB, HeightB);
+    vector<vector<int64_t>> matrix = generateMatrix(HeightA, WidthA);
+    vector<vector<int64_t>> vecMatrix = generateMatrix(HeightB, WidthB);
     cout << "Matrix A:\n";
     printMatrix(matrix);
     cout << "\nMatrix B:\n";
