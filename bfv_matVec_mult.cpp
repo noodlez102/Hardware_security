@@ -139,12 +139,12 @@ int main(int argc, char* argv[]) {
 
     // The encryption process
     std::cout << "Encrypting #vector ........ "<< std::endl;
-    auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintext1);
+    auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintextVector);
     std::cout << "Encrypting #matrix ........ " << std::endl;
     vector<Ciphertext<DCRTPoly>> cipherMatrix; //idk if that type is correct so double check if wrong
 
     for(int i = 0; i < plaintextsMatrix.size(); i++){
-        auto ciphertext2 = cryptoContext->Encrypt(keyPair.publicKey, plaintext2);
+        auto ciphertext2 = cryptoContext->Encrypt(keyPair.publicKey, plaintextsMatrix[i]);
         cipherMatrix.push_back(ciphertext2);
     }
     std::cout << std::endl;
