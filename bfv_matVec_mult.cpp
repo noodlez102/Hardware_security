@@ -57,7 +57,7 @@ vector<vector<int64_t>> rotateMatrix(const vector<vector<int64_t>>& matrix) {
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            mat[i][j] = matrix[j][i];
+            mat[j][i] = matrix[i][j];
         }
     }
 
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     cryptoContext->EvalMultKeyGen(keyPair.secretKey);
     //need this to use evalrot
     vector<int32_t> rotations;
-    for (int j = 0; j < HeightB; j++) {
+    for (int j = -HeightB; j <= HeightB; j++) {
         rotations.push_back(j);
     }
     cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Encrypting #matrix ........ " << std::endl;
     vector<Ciphertext<DCRTPoly>> cipherMatrix; //idk if that type is correct so double check if wrong
 
-    for(int i = 0; i < plaintextsMatrix.size(); i++){
+    for(int i = 0; i < HeightA; i++){
         auto ciphertext2 = cryptoContext->Encrypt(keyPair.publicKey, plaintextsMatrix[i]);
         cipherMatrix.push_back(ciphertext2);
     }
@@ -192,9 +192,12 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < WidthB; i++){
         Ciphertext<DCRTPoly> total;
         bool first = true;
-        for(int j = 0; j < HeightB; j++){
-            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], HeightB - j);
-            auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextMulrot);
+        for(int j = 0; j < HeightB; j++){ //make sure to fix rotation logic since it doesn't wrap around
+            auto ciphertextMulleft      = cryptoContext->EvalRotate(ciphervector[i], j);
+            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], -(HeightB  - j));
+            auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
+
+            auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextrotFinal);
             cipherMult.push_back(ciphertextMultResult);
             if (first) {
                 total = ciphertextMultResult;
