@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
         bool first = true;
         for(int j = 0; j < HeightB; j++){ //make sure to fix rotation logic since it doesn't wrap around
             auto ciphertextMulleft      = cryptoContext->EvalRotate(ciphervector[i], j);
-            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], -(HeightB  - j));
+            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j - HeightB);
             auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
             auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextrotFinal);
