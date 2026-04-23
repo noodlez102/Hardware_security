@@ -128,6 +128,8 @@ int main(int argc, char* argv[]) {
     printMatrix(vecMatrix);
     vector<vector<int64_t>> reorderedMatrix = getDiagonals(matrix);
     cout<< "got through geting diagonals"<<endl;
+    cout << "\nMatrix diagonal:\n";
+    printMatrix(reorderedMatrix);
     vector<vector<int64_t>> Real_Answer = multiplyMatrix(matrix,vecMatrix);
     cout<< "got through geting real answer"<<endl;
 
@@ -164,20 +166,20 @@ int main(int argc, char* argv[]) {
     vector<Ciphertext<DCRTPoly>> cipherMult;
     TIC(t);
     for(int i = 0; i < WidthB; i++){
-        Ciphertext<DCRTPoly> total;
-        bool first = true;
+        // Ciphertext<DCRTPoly> total;
+        // bool first = true;
         for(int j = 0; j< HeightB; j++){
             auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j);
             auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextMulrot);
-
-            if (first) {
-                total = ciphertextMultResult;
-                first = false;
-            } else {
-                total = cryptoContext->EvalAdd(total, ciphertextMultResult);
-            }
+            cipherMult.push_back(ciphertextMultResult);
+            // if (first) {
+            //     total = ciphertextMultResult;
+            //     first = false;
+            // } else {
+            //     total = cryptoContext->EvalAdd(total, ciphertextMultResult);
+            // }
         }
-        cipherMult.push_back(total);
+        // cipherMult.push_back(total);
     }
 
     processingTime = TOC(t);
