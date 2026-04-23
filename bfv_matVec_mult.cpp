@@ -49,15 +49,15 @@ vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
     return mat;
 }
 
-vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
+vector<vector<int64_t>> rotateMatrix(const vector<vector<int64_t>>& matrix) {
     int height = matrix.size();
     int width = matrix[0].size();
 
-    vector<vector<int64_t>> mat(height, vector<int64_t>(width));
+    vector<vector<int64_t>> mat(width, vector<int64_t>(height));
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            mat[i][j] = matrix[j][(i)];
+            mat[i][j] = matrix[j][i];
         }
     }
 
