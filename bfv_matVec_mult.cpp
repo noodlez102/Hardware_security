@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < WidthB; i++){
         Ciphertext<DCRTPoly> total;
         bool first = true;
-        for(int j = 0; j < HeightB; j++){ //make sure to fix rotation logic since it doesn't wrap around
+        for(int j = HeightB; j > 0; j--){ //make sure to fix rotation logic since it doesn't wrap around
             auto ciphertextMulleft      = cryptoContext->EvalRotate(ciphervector[i], j);
             auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j - HeightB);
             auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);

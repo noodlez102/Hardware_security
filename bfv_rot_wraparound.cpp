@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 
     Plaintext pt;
     cryptoContext->Decrypt(keyPair.secretKey, ciphertextrotFinal, &pt);
-
+    pt->SetLength(HeightB);
     std::cout << "Row: " << pt << std::endl;
 
     return 0;
