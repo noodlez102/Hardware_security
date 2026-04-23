@@ -129,18 +129,25 @@ int main(int argc, char* argv[]) {
     vector<vector<int64_t>> reorderedMatrix = getDiagonals(matrix);
     vector<vector<int64_t>> Real_Answer = multiplyMatrix(matrix,vecMatrix);
     vector<Plaintext> plaintextsMatrix;
+    vector<Plaintext> plaintextVector;
+
     
     // First plaintext vector is encoded
     for(int i = 0; i < WidthB; i++){
-        Plaintext plaintextVector               = cryptoContext->MakePackedPlaintext(vecMatrix[i]);
+        plaintextVector.push_back(cryptoContext->MakePackedPlaintext(vecMatrix[i]));
     }
+
     for(int i = 0; i < reorderedMatrix.size(); i++){
         plaintextsMatrix.push_back(cryptoContext->MakePackedPlaintext(reorderedMatrix[i]));
     }
 
     // The encryption process
     std::cout << "Encrypting #vector ........ "<< std::endl;
-    auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintextVector);
+    vector<Ciphertext<DCRTPoly>> ciphervector;
+    for(int i = 0; i < WidthB; i++){
+        auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintextVector);
+        ciphervector.push_back(ciphertext1);
+    }
     std::cout << "Encrypting #matrix ........ " << std::endl;
     vector<Ciphertext<DCRTPoly>> cipherMatrix; //idk if that type is correct so double check if wrong
 
@@ -157,7 +164,7 @@ int main(int argc, char* argv[]) {
         Ciphertext<DCRTPoly> total;
         bool first = true;
         for(int j = 0; j< HeightB; j++){
-            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphertext1, j);
+            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j);
             auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextMulrot);
 
             if (first) {
