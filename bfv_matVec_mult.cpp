@@ -131,8 +131,9 @@ int main(int argc, char* argv[]) {
     vector<Plaintext> plaintextsMatrix;
     
     // First plaintext vector is encoded
-    Plaintext plaintextVector               = cryptoContext->MakePackedPlaintext(vecMatrix);
-
+    for(int i = 0; i < WidthB; i++){
+        Plaintext plaintextVector               = cryptoContext->MakePackedPlaintext(vecMatrix[i]);
+    }
     for(int i = 0; i < reorderedMatrix.size(); i++){
         plaintextsMatrix.push_back(cryptoContext->MakePackedPlaintext(reorderedMatrix[i]));
     }
