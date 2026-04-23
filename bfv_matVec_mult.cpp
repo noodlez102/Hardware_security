@@ -127,7 +127,10 @@ int main(int argc, char* argv[]) {
     cout << "\nMatrix B:\n";
     printMatrix(vecMatrix);
     vector<vector<int64_t>> reorderedMatrix = getDiagonals(matrix);
+    cout<< "got through geting diagonals"<<endl;
     vector<vector<int64_t>> Real_Answer = multiplyMatrix(matrix,vecMatrix);
+    cout<< "got through geting real answer"<<endl;
+
     vector<Plaintext> plaintextsMatrix;
     vector<Plaintext> plaintextVector;
 
@@ -145,7 +148,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Encrypting #vector ........ "<< std::endl;
     vector<Ciphertext<DCRTPoly>> ciphervector;
     for(int i = 0; i < WidthB; i++){
-        auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintextVector);
+        auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintextVector[i]);
         ciphervector.push_back(ciphertext1);
     }
     std::cout << "Encrypting #matrix ........ " << std::endl;
