@@ -139,12 +139,19 @@ int main(int argc, char* argv[]) {
     
     // First plaintext vector is encoded
     for(int i = 0; i < WidthB; i++){
-        plaintextVector.push_back(cryptoContext->MakePackedPlaintext(vecMatrix[i]));
+        auto pt = cryptoContext->MakePackedPlaintext(vecMatrix[i]);
+        plaintextVector.push_back(pt);
+        cout << "plain text of vector: "<< pt;
     }
+    cout <<endl;
 
     for(int i = 0; i < reorderedMatrix.size(); i++){
+        auto pt = cryptoContext->MakePackedPlaintext(reorderedMatrix[i]);
+
         plaintextsMatrix.push_back(cryptoContext->MakePackedPlaintext(reorderedMatrix[i]));
+        cout << "plain text of matrix: "<< pt;
     }
+    cout <<endl;
 
     // The encryption process
     std::cout << "Encrypting #vector ........ "<< std::endl;
@@ -166,20 +173,20 @@ int main(int argc, char* argv[]) {
     vector<Ciphertext<DCRTPoly>> cipherMult;
     TIC(t);
     for(int i = 0; i < WidthB; i++){
-        // Ciphertext<DCRTPoly> total;
-        // bool first = true;
+        Ciphertext<DCRTPoly> total;
+        bool first = true;
         for(int j = 0; j< HeightB; j++){
             auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j);
             auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextMulrot);
             cipherMult.push_back(ciphertextMultResult);
-            // if (first) {
-            //     total = ciphertextMultResult;
-            //     first = false;
-            // } else {
-            //     total = cryptoContext->EvalAdd(total, ciphertextMultResult);
-            // }
+            if (first) {
+                total = ciphertextMultResult;
+                first = false;
+            } else {
+                total = cryptoContext->EvalAdd(total, ciphertextMultResult);
+            }
         }
-        // cipherMult.push_back(total);
+        cipherMult.push_back(total);
     }
 
     processingTime = TOC(t);
