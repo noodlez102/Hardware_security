@@ -16,9 +16,9 @@
 using namespace lbcrypto;
 using namespace std;
 
-#define HeightA 6
-#define WidthA 6
-#define HeightB 6
+#define HeightA 3
+#define WidthA 3
+#define HeightB 3
 #define WidthB 1
 
 
@@ -192,13 +192,13 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < WidthB; i++){
         Ciphertext<DCRTPoly> total;
         bool first = true;
-        for(int j = HeightB; j > 0; j--){ //make sure to fix rotation logic since it doesn't wrap around
+        for(int j = 0; j < HeightB; j--){ //make sure to fix rotation logic since it doesn't wrap around
             auto ciphertextMulleft      = cryptoContext->EvalRotate(ciphervector[i], j);
             auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j - HeightB);
             auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
             auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextrotFinal);
-            cipherMult.push_back(ciphertextMultResult);
+            //cipherMult.push_back(ciphertextMultResult);
             if (first) {
                 total = ciphertextMultResult;
                 first = false;
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
         cryptoContext->Decrypt(keyPair.secretKey, cipherMult[i], &pt);
 
         plaintextMultResult.push_back(pt);
-
+        pt->SetLength(HeightB);
         std::cout << "Row: " << pt << std::endl;
     }
 
