@@ -140,9 +140,9 @@ int main(int argc, char* argv[]) {
         rotations.push_back(j);
     }
 
-    int shift = 512 / 2; // 256
-    while (shift >= 1) {
-         rotations.push_back(shift);
+    int shift = 512 / 2;
+    while (shift >= 10) {
+        rotations.push_back(shift);
         shift /= 2;
     }
 
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
     }
 
     // hybrid reduction (FIXED)
-    int shift = 512 / 2;
+    shift = 512 / 2;
     while (shift >= 10) {
         auto rot = cryptoContext->EvalRotate(cipherMult, shift);
         cipherMult = cryptoContext->EvalAdd(cipherMult, rot);
