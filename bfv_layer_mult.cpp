@@ -111,6 +111,7 @@ vector<vector<int64_t>> multiplyMatrix(const vector<vector<int64_t>>& A,const ve
 
     return C;
 }
+
 int main(int argc, char* argv[]) {
 	// if (argc != 4) {
     //     std::cerr << "Usage: " << argv[0] << " <matrix> <vector> " << std::endl;
@@ -159,7 +160,7 @@ int main(int argc, char* argv[]) {
     // vector<int64_t> mat_vals = parsemat(argv[1]);
     // vector<int64_t> vec_vals = parsemat(argv[2]);
     vector<vector<int64_t>> weight = loadFromFile(WeightPath);
-    vector<vector<int64_t>> hybridweight = getDiagonals(WeightPath);
+    vector<vector<int64_t>> hybridweight = getDiagonals(weight);
 
     vector<vector<int64_t>> input = loadFromFile(InputsPath);
 
@@ -214,11 +215,11 @@ int main(int argc, char* argv[]) {
     TIC(t);
 
     //first half 
-    Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput, plaintextweight[0]);
+    Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
 
     for(int j = 1; j < 10; j++){ 
-        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput, j);
-        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput, j - 10);
+        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
+        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
         auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
         auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
@@ -238,7 +239,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < WidthB; i++) {
         Plaintext pt;
-        cryptoContext->Decrypt(keyPair.secretKey, cipherMult[i], &pt);
+        cryptoContext->Decrypt(keyPair.secretKey, cipherMult, &pt);
 
         plaintextMultResult.push_back(pt);
         pt->SetLength(HeightB);
