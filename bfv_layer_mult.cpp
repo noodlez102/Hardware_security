@@ -139,6 +139,13 @@ int main(int argc, char* argv[]) {
     for (int j = -10; j <= 10; j++) {
         rotations.push_back(j);
     }
+
+    int shift = 512 / 2; // 256
+    while (shift >= 1) {
+         rotations.push_back(shift);
+        shift /= 2;
+    }
+
     cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
 
     cout << endl;
@@ -231,12 +238,26 @@ int main(int argc, char* argv[]) {
     //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
     //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
     // }
-    int chunkSize = 10;
-    int chunks    = 512 / chunkSize; // 51
-    for(int step = 1; step < chunks; step *= 2){
-        Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
-        cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
+    // int chunkSize = 10;
+    // int chunks    = 512 / chunkSize; // 51
+    // for(int step = 1; step < chunks; step *= 2){
+    //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
+    //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
+    // }
+
+    shift = 512 / 2; // 256
+    while (shift >= 1) {
+        Ciphertext<DCRTPoly> rot = cryptoContext->EvalRotate(cipherMult, shift);
+        cipherMult = cryptoContext->EvalAdd(cipherMult, rot);
+        shift /= 2;
     }
+
+    // Step 3 - mask first 10 slots
+    vector<double> mask(512, 0.0);
+    for(int i = 0; i < 10; i++)
+        mask[i] = 1.0;
+    Plaintext plaintextMask = cryptoContext->MakeCKKSPackedPlaintext(mask);
+    cipherMult = cryptoContext->EvalMult(cipherMult, plaintextMask);
 
     processingTime = TOC(t);
     std::cout << "Multiplicaton time matrix * Vector: " << processingTime << "ms" << std::endl;
@@ -249,7 +270,7 @@ int main(int argc, char* argv[]) {
         cryptoContext->Decrypt(keyPair.secretKey, cipherMult, &pt);
 
         plaintextMultResult.push_back(pt);
-        pt->SetLength(HeightB);
+        pt->SetLength(20);
         std::cout << "Row: " << pt << std::endl;
     }
 
