@@ -224,12 +224,31 @@ int main(int argc, char* argv[]) {
 
     //first half 
     Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
+
     for(int j = 1; j < 10; j++){ 
-        Ciphertext<DCRTPoly> ciphertextRotated    = cryptoContext->EvalRotate(cipherinput[0], -j);
-        Ciphertext<DCRTPoly> ciphertextMultResult = cryptoContext->EvalMult(ciphertextRotated, plaintextweight[j]);
-        cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
+        auto left  = cryptoContext->EvalRotate(cipherinput[0], j);
+        auto right = cryptoContext->EvalRotate(cipherinput[0], j - 512); // better wrap
+
+        auto rotated = cryptoContext->EvalAdd(left, right);
+
+        auto mult = cryptoContext->EvalMult(rotated, plaintextweight[j]);
+        cipherMult = cryptoContext->EvalAdd(cipherMult, mult);
     }
 
+    // hybrid reduction (FIXED)
+    int shift = 512 / 2;
+    while (shift >= 10) {
+        auto rot = cryptoContext->EvalRotate(cipherMult, shift);
+        cipherMult = cryptoContext->EvalAdd(cipherMult, rot);
+        shift /= 2;
+    }
+
+    // mask
+    vector<int64_t> mask(512, 0);
+    for (int i = 0; i < 10; i++) mask[i] = 1;
+
+    auto ptMask = cryptoContext->MakePackedPlaintext(mask);
+    cipherMult = cryptoContext->EvalMult(cipherMult, ptMask);
     // Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
 
     // for(int j = 1; j < 10; j++){ 
@@ -252,19 +271,6 @@ int main(int argc, char* argv[]) {
     //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
     // }
 
-    shift = 512 / 2; // 256
-    while (shift >= 1) {
-        Ciphertext<DCRTPoly> rot = cryptoContext->EvalRotate(cipherMult, shift);
-        cipherMult = cryptoContext->EvalAdd(cipherMult, rot);
-        shift /= 2;
-    }
-
-    // Step 3 - mask first 10 slots
-    vector<int64_t> mask(512, 0.0);
-    for(int i = 0; i < 10; i++)
-        mask[i] = 1.0;
-    Plaintext plaintextMask = cryptoContext->MakePackedPlaintext(mask);
-    cipherMult = cryptoContext->EvalMult(cipherMult, plaintextMask);
 
     processingTime = TOC(t);
     std::cout << "Multiplicaton time matrix * Vector: " << processingTime << "ms" << std::endl;
