@@ -256,7 +256,7 @@ int main(int argc, char* argv[]) {
     vector<double> mask(512, 0.0);
     for(int i = 0; i < 10; i++)
         mask[i] = 1.0;
-    Plaintext plaintextMask = cryptoContext->MakeCKKSPackedPlaintext(mask);
+    Plaintext plaintextMask = cryptoContext->MakePackedPlaintext(mask);
     cipherMult = cryptoContext->EvalMult(cipherMult, plaintextMask);
 
     processingTime = TOC(t);
