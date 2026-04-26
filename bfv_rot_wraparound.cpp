@@ -110,11 +110,11 @@ int main(int argc, char* argv[]) {
     keyPair = cryptoContext->KeyGen();
     cryptoContext->EvalMultKeyGen(keyPair.secretKey);
     //need this to use evalrot
-    // vector<int32_t> rotations;
-    // for (int j = -HeightB; j <= HeightB; j++) {
-    //     rotations.push_back(j);
-    // }
-    cryptoContext->EvalRotateKeyGen(keyPair.secretKey, {1});
+    vector<int32_t> rotations;
+    for (int j = -HeightB; j <= HeightB; j++) {
+        rotations.push_back(j);
+    }
+    cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
 
     cout << endl;
     cout << "+----------------------------------------------------------------------+" << endl;
@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
 
     vector<Plaintext> plaintextVector;
 
-    
+
     // First plaintext vector is encoded
     for(int i = 0; i < WidthB; i++){
         auto pt = cryptoContext->MakePackedPlaintext(rotatedVecMatrix[i]);
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
     cipherMult.push_back(ciphertextMulleft);
 
     for(int i =1; i< HeightB; i++){
-        cryptoContext->EvalRotate(ciphertextMulleft, 1);
+        cryptoContext->EvalRotate(ciphertextMulleft, i);
         cipherMult.push_back(ciphertextMulleft);
     }
     // auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[0], 1 - HeightB);
@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Multiplicaton time matrix * Vector: " << processingTime << "ms" << std::endl;
     
     // Decrypt the result of multiplications
-    for(int i =0; i< cipherMult.size();i++){
+    for(int i =0; i< HeightB;i++){
         Plaintext pt;
         cryptoContext->Decrypt(keyPair.secretKey, cipherMult[i], &pt);
         pt->SetLength(HeightB);

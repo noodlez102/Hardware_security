@@ -164,8 +164,7 @@ int main(int argc, char* argv[]) {
 
     for(int i = 0; i < reorderedMatrix.size(); i++){
         auto pt = cryptoContext->MakePackedPlaintext(reorderedMatrix[i]);
-
-        plaintextsMatrix.push_back(cryptoContext->MakePackedPlaintext(reorderedMatrix[i]));
+        plaintextsMatrix.push_back(pt);
         cout << "plain text of matrix: "<< pt <<endl;
     }
     cout <<endl;
