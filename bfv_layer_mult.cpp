@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
     cryptoContext->EvalMultKeyGen(keyPair.secretKey);
     //need this to use evalrot
     vector<int32_t> rotations;
-    for (int j = 10; j <= 512; j*=2) {
+    for (int j = -512; j <= 512; j++) {
         rotations.push_back(j);
     }
     for (int j = -10; j <= 10; j++) {
