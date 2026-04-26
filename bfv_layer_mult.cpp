@@ -166,13 +166,19 @@ int main(int argc, char* argv[]) {
     vector<vector<int64_t>> bias = loadFromFile(BiasPath);
     vector<vector<int64_t>> rotatedbias  = rotateMatrix(bias);
 
+    vector<vector<int64_t>> Real_Answer = multiplyMatrix(weight, input);
+    cout<< "got through geting real answer"<<endl;
+
+
     vector<Plaintext> plaintextweight;
     vector<Plaintext> plaintextinput;
     vector<Plaintext> plaintextbias;
     cout<<"matrix of weight: "<<endl;
     printMatrix(weight);
     cout<<endl;
-
+    cout<<"matrix of weight: "<<endl;
+    printMatrix(Real_Answer);
+    cout<<endl;
     // First plaintext vector is encoded
     for(int i = 0; i < hybridweight.size(); i++){
         auto pt = cryptoContext->MakePackedPlaintext(hybridweight[i]);
