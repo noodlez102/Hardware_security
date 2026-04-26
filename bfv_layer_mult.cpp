@@ -227,9 +227,15 @@ int main(int argc, char* argv[]) {
         cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
     }
     //next half needs to rotate and accumulate into a 10x1
-    for(int i = 10; i <512;i*=2){
-        auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
-        cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
+    // for(int i = 10; i <512; i*=2){
+    //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
+    //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
+    // }
+    int chunkSize = 10;
+    int chunks    = 512 / chunkSize; // 51
+    for(int step = 1; step < chunks; step *= 2){
+        Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
+        cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
     }
 
     processingTime = TOC(t);
