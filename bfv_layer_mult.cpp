@@ -160,6 +160,7 @@ int main(int argc, char* argv[]) {
     // vector<int64_t> mat_vals = parsemat(argv[1]);
     // vector<int64_t> vec_vals = parsemat(argv[2]);
     vector<vector<int64_t>> weight = loadFromFile(WeightPath);
+
     vector<vector<int64_t>> hybridweight = getDiagonals(weight);
 
     vector<vector<int64_t>> input = loadFromFile(InputsPath);
@@ -167,7 +168,7 @@ int main(int argc, char* argv[]) {
     vector<vector<int64_t>> bias = loadFromFile(BiasPath);
     vector<vector<int64_t>> rotatedbias  = rotateMatrix(bias);
 
-    vector<vector<int64_t>> Real_Answer = multiplyMatrix(weight, input);
+    vector<vector<int64_t>> Real_Answer = multiplyMatrix(weight, rotateMatrix(input));
     cout<< "got through geting real answer"<<endl;
 
 
@@ -196,7 +197,7 @@ int main(int argc, char* argv[]) {
     }
     cout <<endl;
 
-    for(int i = 0; i < bias.size(); i++){
+    for(int i = 0; i < rotatedbias.size(); i++){
         auto pt = cryptoContext->MakePackedPlaintext(rotatedbias[i]);
         plaintextbias.push_back(pt);
         cout << "plain text of bias: "<< pt <<endl;
@@ -223,7 +224,7 @@ int main(int argc, char* argv[]) {
         auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
         auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
-        cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextrotFinal);
+        cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
     }
     //next half needs to rotate and accumulate into a 10x1
     for(int i = 10; i <512;i*=2){
