@@ -224,15 +224,22 @@ int main(int argc, char* argv[]) {
 
     //first half 
     Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
-
     for(int j = 1; j < 10; j++){ 
-        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
-        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
-        auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
-
-        auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
-        cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
+        Ciphertext<DCRTPoly> ciphertextRotated    = cryptoContext->EvalRotate(cipherinput[0], -j);
+        Ciphertext<DCRTPoly> ciphertextMultResult = cryptoContext->EvalMult(ciphertextRotated, plaintextweight[j]);
+        cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
     }
+
+    // Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
+
+    // for(int j = 1; j < 10; j++){ 
+    //     auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
+    //     auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
+    //     auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
+
+    //     auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
+    //     cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
+    // }
     //next half needs to rotate and accumulate into a 10x1
     // for(int i = 10; i <512; i*=2){
     //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
@@ -253,7 +260,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Step 3 - mask first 10 slots
-    vector<double> mask(512, 0.0);
+    vector<int64_t> mask(512, 0.0);
     for(int i = 0; i < 10; i++)
         mask[i] = 1.0;
     Plaintext plaintextMask = cryptoContext->MakePackedPlaintext(mask);
