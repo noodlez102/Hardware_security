@@ -244,8 +244,8 @@ int main(int argc, char* argv[]) {
     Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
     cout <<"starting first rot and accum"<<endl;
     for(int j = 1; j < 10; j++){ 
-        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
-        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
+        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], -j);
+        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], -j + 10);
         auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
         auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
