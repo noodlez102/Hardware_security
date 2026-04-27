@@ -137,16 +137,12 @@ int main(int argc, char* argv[]) {
 
     int num_shifts = int(log2(512) - log2(16));
     int shift = 512 / 2;
-    for (int i = 0; i < num_shifts; ++i) {
+    for (int i = 0; i < num_shifts; i++) {
         rotations.push_back(shift);
         // rotations.push_back(shift - num_shifts);
         shift /= 2;
     }
-
-    for (int j = 10; j <= 512; j*=2) {
-        rotations.push_back(j);
-    }
-    for (int j = -512; j <= 512; j++) {
+    for (int j = -16; j <= 16; j++) {
         rotations.push_back(j);
     }
 
@@ -238,15 +234,19 @@ int main(int argc, char* argv[]) {
 
     //first half 
 
-    Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
+    Ciphertext<DCRTPoly> cipherMult;
     cout <<"starting first rot and accum"<<endl;
-    for(int j = 1; j < 16; j++){ 
+    for(int j = 0; j < 16; j++){ 
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
         auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 16);
         auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
         auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
-        cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
+        if(j=0){
+            cipherMult = ciphertextMultResult;
+        }else{
+            cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
+        }
     }
     //next half needs to rotate and accumulate into a 10x1
 
