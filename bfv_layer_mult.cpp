@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     for (int j = 10; j <= 512; j*=2) {
         rotations.push_back(j);
     }
-    for (int j = -10; j <= 10; j++) {
+    for (int j = --512; j <= 512; j++) {
         rotations.push_back(j);
     }
 
@@ -245,7 +245,7 @@ int main(int argc, char* argv[]) {
     cout <<"starting first rot and accum"<<endl;
     for(int j = 1; j < 10; j++){ 
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], -j);
-        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], -j + 10);
+        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], -j + 512);
         auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
         auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
