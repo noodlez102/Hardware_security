@@ -257,7 +257,7 @@ int main(int argc, char* argv[]) {
 
     num_shifts = int(log2(512) - log2(10));
     shift = 512 / 2;
-    for (int i = 0; i < num_shifts; ++i) {
+    for (int i = 0; i < num_shifts; i++) {
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherMult, shift);
         cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMulleft);
         shift /= 2;
