@@ -3,6 +3,15 @@ from math import log2
 def matrix_vector_multiply_squat(packed_matrix, vector):
     """Multiply the squat-diagonal-packed matrix by the vector."""
     n, m = len(packed_matrix), len(packed_matrix[0])
+    def rotate(lst, shift):
+        shift = shift % m
+        return lst[shift:] + lst[:shift]
+    
+    def add(a, b):
+        return [x + y for x, y in zip(a, b)]
+    
+    def mul(a, b):
+        return [x * y for x, y in zip(a, b)]
 
     # Same as Halevi-Shoup
     row_products = []
