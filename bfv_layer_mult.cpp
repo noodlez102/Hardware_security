@@ -145,14 +145,13 @@ int main(int argc, char* argv[]) {
     for (int j = 0; j <= 16; j++) {
         rotations.push_back(j);
         rotations.push_back(j-512);
-
     }
 
     cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
 
     cout << endl;
     cout << "+----------------------------------------------------------------------+" << endl;
-    cout << "| OPENFHE: BFV Scheme: Multiplication of Matrix and Vector     |" << endl;
+    cout << "| OPENFHE: BFV Scheme: Computation of layer     |" << endl;
     cout << "+----------------------------------------------------------------------|" << endl;
     cout << "/" << endl;
     
@@ -187,8 +186,8 @@ int main(int argc, char* argv[]) {
     vector<vector<int64_t>> bias = loadFromFile(BiasPath);
     vector<vector<int64_t>> rotatedbias  = rotateMatrix(bias);
 
-    vector<vector<int64_t>> Real_Answer = multiplyMatrix(weight, rotateMatrix(input));
-    cout<< "got through geting real answer"<<endl;
+    // vector<vector<int64_t>> Real_Answer = multiplyMatrix(weight, rotateMatrix(input));
+    // cout<< "got through geting real answer"<<endl;
 
 
     vector<Plaintext> plaintextweight;
@@ -237,7 +236,7 @@ int main(int argc, char* argv[]) {
     //first half 
 
     Ciphertext<DCRTPoly> cipherMult;
-    cout <<"starting first rot and accum"<<endl;
+    // cout <<"starting first rot and accum"<<endl;
     for(int j = 0; j < 16; j++){ 
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
         auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 512);
@@ -252,7 +251,7 @@ int main(int argc, char* argv[]) {
     }
     //next half needs to rotate and accumulate into a 10x1
 
-    cout <<"starting 2nd rot and accum"<<endl;
+    // cout <<"starting 2nd rot and accum"<<endl;
 
     num_shifts = int(log2(512) - log2(16));
     shift = 512 / 2;
@@ -261,7 +260,7 @@ int main(int argc, char* argv[]) {
         cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMulleft);
         shift /= 2;
     }
-    cipherMult = cryptoContext->EvalAdd(cipherMult, plaintextbias);
+    cipherMult = cryptoContext->EvalAdd(cipherMult, plaintextbias[0]);
     // for(int i = 10; i <512; i*=2){
     //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
     //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
@@ -273,7 +272,7 @@ int main(int argc, char* argv[]) {
     //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
     // }
     processingTime = TOC(t);
-    std::cout << "Multiplicaton time matrix * Vector: " << processingTime << "ms" << std::endl;
+    std::cout << "layer time calculation: " << processingTime << "ms" << std::endl;
     
     // Decrypt the result of multiplications
     vector<Plaintext> plaintextMultResult;
@@ -283,11 +282,11 @@ int main(int argc, char* argv[]) {
         cryptoContext->Decrypt(keyPair.secretKey, cipherMult, &pt);
 
         plaintextMultResult.push_back(pt);
-        pt->SetLength(20);
+        pt->SetLength(10);
         std::cout << "Row: " << pt << std::endl;
     }
 
-    cout << "\nReal Answer B:\n";
-    printMatrix(Real_Answer);
+    // cout << "\nReal Answer B:\n";
+    // printMatrix(Real_Answer);
     return 0;
 }
