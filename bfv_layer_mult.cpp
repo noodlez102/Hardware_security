@@ -171,7 +171,14 @@ int main(int argc, char* argv[]) {
     // vector<int64_t> mat_vals = parsemat(argv[1]);
     // vector<int64_t> vec_vals = parsemat(argv[2]);
     vector<vector<int64_t>> weight = loadFromFile(WeightPath);
-
+    vector<vector<int64_t>> test = {{1, 2, 3, 4}, {5, 6, 7, 8}};
+    cout<<"matrix of test: "<<endl;
+    printMatrix(test);
+    cout<<endl;
+    vector<vector<int64_t>> test_diagonal = getDiagonals(test);
+    cout<<"matrix of test_diagonal: "<<endl;
+    printMatrix(test_diagonal);
+    cout<<endl;
     vector<vector<int64_t>> hybridweight = getDiagonals(weight);
 
     vector<vector<int64_t>> input = loadFromFile(InputsPath);
@@ -186,7 +193,7 @@ int main(int argc, char* argv[]) {
     vector<Plaintext> plaintextweight;
     vector<Plaintext> plaintextinput;
     vector<Plaintext> plaintextbias;
-    cout<<"matrix of weight: "<<endl;
+    //cout<<"matrix of weight: "<<endl;
     // printMatrix(weight);
     // cout<<endl;
     // cout<<"matrix of weight: "<<endl;
@@ -255,8 +262,6 @@ int main(int argc, char* argv[]) {
     shift = 512 / 2;
     for (int i = 0; i < num_shifts; ++i) {
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherMult, shift);
-        // auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherMult, shift - num_shifts);
-        // auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
         cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMulleft);
         shift /= 2;
     }
