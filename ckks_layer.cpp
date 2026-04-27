@@ -128,12 +128,12 @@ int main(int argc, char* argv[]) {
     parameters.SetMultiplicativeDepth(multDepth);
     parameters.SetScalingModSize(scaleModSize);
     parameters.SetBatchSize(batchSize);
-    CryptoContext<DCRTPoly> cc = GenCryptoContext(parameters);
-    cc->Enable(PKE);
-    cc->Enable(KEYSWITCH);
-    cc->Enable(LEVELEDSHE);
-    auto keyPair = cc->KeyGen();
-    cc->EvalMultKeyGen(keyPair.secretKey);
+    CryptoContext<DCRTPoly> cryptoContext = GenCryptoContext(parameters);
+    cryptoContext->Enable(PKE);
+    cryptoContext->Enable(KEYSWITCH);
+    cryptoContext->Enable(LEVELEDSHE);
+    auto keyPair = cryptoContext->KeyGen();
+    cryptoContext->EvalMultKeyGen(keyPair.secretKey);
 
     vector<int32_t> rotations;
 
@@ -159,11 +159,11 @@ int main(int argc, char* argv[]) {
     
     cout << endl;
     cout << "Encryption Parameters: " << endl;
-    std::cout << "p = " << cc->GetCryptoParameters()->GetPlaintextModulus() << std::endl;
-    std::cout << "n = " << cc->GetCryptoParameters()->GetElementParams()->GetCyclotomicOrder() / 2
+    std::cout << "p = " << cryptoContext->GetCryptoParameters()->GetPlaintextModulus() << std::endl;
+    std::cout << "n = " << cryptoContext->GetCryptoParameters()->GetElementParams()->GetCyclotomicOrder() / 2
               << std::endl;
     std::cout << "log2 q = "
-              << log2(cc->GetCryptoParameters()->GetElementParams()->GetModulus().ConvertToDouble())
+              << log2(cryptoContext->GetCryptoParameters()->GetElementParams()->GetModulus().ConvertToDouble())
               << std::endl;
 
     // Parse inputs as doubles (CKKS works on floating-point)
