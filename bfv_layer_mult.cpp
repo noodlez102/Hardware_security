@@ -139,6 +139,7 @@ int main(int argc, char* argv[]) {
     int shift = 512 / 2;
     for (int i = 0; i < num_shifts; ++i) {
         rotations.push_back(shift);
+        rotations.push_back(shift - num_shifts);
         shift /= 2;
     }
 
