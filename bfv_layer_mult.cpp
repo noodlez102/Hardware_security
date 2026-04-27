@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     vector<int32_t> rotations;
 
     int num_shifts = int(log2(512) - log2(10));
-    int shift = m / 2;
+    int shift = 512 / 2;
     for (int i = 0; i < num_shifts; ++i) {
         rotations.push_back(shift);
         shift /= 2;
@@ -186,16 +186,16 @@ int main(int argc, char* argv[]) {
     vector<Plaintext> plaintextinput;
     vector<Plaintext> plaintextbias;
     cout<<"matrix of weight: "<<endl;
-    printMatrix(weight);
-    cout<<endl;
-    cout<<"matrix of weight: "<<endl;
-    printMatrix(Real_Answer);
-    cout<<endl;
+    // printMatrix(weight);
+    // cout<<endl;
+    // cout<<"matrix of weight: "<<endl;
+    // printMatrix(Real_Answer);
+    // cout<<endl;
     // First plaintext vector is encoded
     for(int i = 0; i < hybridweight.size(); i++){
         auto pt = cryptoContext->MakePackedPlaintext(hybridweight[i]);
         plaintextweight.push_back(pt);
-        cout << "plain text of diagonal weight: "<< pt <<endl;
+        // cout << "plain text of diagonal weight: "<< pt <<endl;
 
     }
     cout <<endl;
@@ -203,14 +203,14 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < input.size(); i++){
         auto pt = cryptoContext->MakePackedPlaintext(input[i]);
         plaintextinput.push_back(pt);
-        cout << "plain text of input: "<< pt <<endl;
+        // cout << "plain text of input: "<< pt <<endl;
     }
     cout <<endl;
 
     for(int i = 0; i < rotatedbias.size(); i++){
         auto pt = cryptoContext->MakePackedPlaintext(rotatedbias[i]);
         plaintextbias.push_back(pt);
-        cout << "plain text of bias: "<< pt <<endl;
+        // cout << "plain text of bias: "<< pt <<endl;
     }
     cout <<endl;
 
@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
     //first half 
 
     Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
-
+    cout <<"starting first rot and accum"<<endl;
     for(int j = 1; j < 10; j++){ 
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
         auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
@@ -248,9 +248,10 @@ int main(int argc, char* argv[]) {
     //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
     //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
     // }
+    cout <<"starting 2nd rot and accum"<<endl;
 
     num_shifts = int(log2(512) - log2(10));
-    shift = m / 2;
+    shift = 512 / 2;
     for (int i = 0; i < num_shifts; ++i) {
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherMult, shift);
         auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherMult, shift - num_shifts);
