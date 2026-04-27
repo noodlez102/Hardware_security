@@ -1,9 +1,9 @@
-
 #define PROFILE
 
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <cstdlib>
 #include <iterator>
@@ -17,10 +17,6 @@
 using namespace lbcrypto;
 using namespace std;
 
-#define HeightA 3
-#define WidthA 3
-#define HeightB 3
-#define WidthB 1
 
 #define WeightPath "../question_3/weights.txt"
 #define InputsPath "../question_3/inputs.txt"
@@ -114,25 +110,31 @@ vector<vector<int64_t>> multiplyMatrix(const vector<vector<int64_t>>& A,const ve
 }
 
 int main(int argc, char* argv[]) {
-	// if (argc != 4) {
-    //     std::cerr << "Usage: " << argv[0] << " <matrix> <vector> " << std::endl;
-    //     return 1;
-    // }
+    if (argc != 4) {
+        std::cerr << "Usage: " << argv[0] << " <num1> <num2> <num3>" << std::endl;
+        return 1;
+    }
+
+    uint32_t multDepth = 3;
     TimeVar t;
-    double processingTime(0.000);
-    
-    // Sample Program: Step 1: Set CryptoContext
-    CCParams<CryptoContextBFVRNS> parameters;
-    parameters.SetPlaintextModulus(536903681);
-    parameters.SetMultiplicativeDepth(3);
-    parameters.SetMaxRelinSkDeg(3);
-    CryptoContext<DCRTPoly> cryptoContext = GenCryptoContext(parameters);
-    cryptoContext->Enable(PKE);
-    cryptoContext->Enable(LEVELEDSHE);
-    KeyPair<DCRTPoly> keyPair;
-    keyPair = cryptoContext->KeyGen();
-    cryptoContext->EvalMultKeyGen(keyPair.secretKey);
-    //need this to use evalrot
+    double processingTime(0.0);
+    uint32_t scaleModSize = 50;
+    uint32_t batchSize = 1; //set this value to 2^x close to size of vectors you are dealing with
+    Plaintext result;
+    std::cout.precision(8);
+
+    // Set crypto parameters for CKKS
+    CCParams<CryptoContextCKKSRNS> parameters;
+    parameters.SetMultiplicativeDepth(multDepth);
+    parameters.SetScalingModSize(scaleModSize);
+    parameters.SetBatchSize(batchSize);
+    CryptoContext<DCRTPoly> cc = GenCryptoContext(parameters);
+    cc->Enable(PKE);
+    cc->Enable(KEYSWITCH);
+    cc->Enable(LEVELEDSHE);
+    auto keyPair = cc->KeyGen();
+    cc->EvalMultKeyGen(keyPair.secretKey);
+
     vector<int32_t> rotations;
 
     int num_shifts = int(log2(512) - log2(16));
@@ -151,34 +153,25 @@ int main(int argc, char* argv[]) {
 
     cout << endl;
     cout << "+----------------------------------------------------------------------+" << endl;
-    cout << "| OPENFHE: BFV Scheme: Computation of layer     |" << endl;
+    cout << "| OPENFHE: CKKS Scheme: Multiplication of three inputs     |" << endl;
     cout << "+----------------------------------------------------------------------|" << endl;
     cout << "/" << endl;
     
     cout << endl;
     cout << "Encryption Parameters: " << endl;
-    std::cout << "p = " << cryptoContext->GetCryptoParameters()->GetPlaintextModulus() << std::endl;
-    std::cout << "n = " << cryptoContext->GetCryptoParameters()->GetElementParams()->GetCyclotomicOrder() / 2
+    std::cout << "p = " << cc->GetCryptoParameters()->GetPlaintextModulus() << std::endl;
+    std::cout << "n = " << cc->GetCryptoParameters()->GetElementParams()->GetCyclotomicOrder() / 2
               << std::endl;
     std::cout << "log2 q = "
-              << log2(cryptoContext->GetCryptoParameters()->GetElementParams()->GetModulus().ConvertToDouble())
+              << log2(cc->GetCryptoParameters()->GetElementParams()->GetModulus().ConvertToDouble())
               << std::endl;
 
-    //generate random inputs and print them out
-    // vector<int64_t> mat_vals = parsemat(argv[1]);
-    // vector<int64_t> vec_vals = parsemat(argv[2]);
+    // Parse inputs as doubles (CKKS works on floating-point)
     vector<vector<int64_t>> weight = loadFromFile(WeightPath);
     for (int i = 0; i < 6; ++i) {
         weight.push_back(vector<int64_t>(512, 0));
     }
-    // vector<vector<int64_t>> test = {{1, 2, 3, 4}, {5, 6, 7, 8}};
-    // cout<<"matrix of test: "<<endl;
-    // printMatrix(test);
-    // cout<<endl;
-    // vector<vector<int64_t>> test_diagonal = getDiagonals(test);
-    // cout<<"matrix of test_diagonal: "<<endl;
-    // printMatrix(test_diagonal);
-    // cout<<endl;
+
     vector<vector<int64_t>> hybridweight = getDiagonals(weight);
 
     vector<vector<int64_t>> input = loadFromFile(InputsPath);
@@ -186,22 +179,13 @@ int main(int argc, char* argv[]) {
     vector<vector<int64_t>> bias = loadFromFile(BiasPath);
     vector<vector<int64_t>> rotatedbias  = rotateMatrix(bias);
 
-    // vector<vector<int64_t>> Real_Answer = multiplyMatrix(weight, rotateMatrix(input));
-    // cout<< "got through geting real answer"<<endl;
-
-
     vector<Plaintext> plaintextweight;
     vector<Plaintext> plaintextinput;
     vector<Plaintext> plaintextbias;
-    //cout<<"matrix of weight: "<<endl;
-    // printMatrix(weight);
-    // cout<<endl;
-    // cout<<"matrix of weight: "<<endl;
-    // printMatrix(Real_Answer);
-    // cout<<endl;
-    // First plaintext vector is encoded
+
+    // Encode inputs
     for(int i = 0; i < hybridweight.size(); i++){
-        auto pt = cryptoContext->MakePackedPlaintext(hybridweight[i]);
+        auto pt = cryptoContext->MakeCKKSPackedPlaintext(hybridweight[i]);
         plaintextweight.push_back(pt);
         // cout << "plain text of diagonal weight: "<< pt <<endl;
 
@@ -209,31 +193,29 @@ int main(int argc, char* argv[]) {
     cout <<endl;
 
     for(int i = 0; i < input.size(); i++){
-        auto pt = cryptoContext->MakePackedPlaintext(input[i]);
+        auto pt = cryptoContext->MakeCKKSPackedPlaintext(input[i]);
         plaintextinput.push_back(pt);
         // cout << "plain text of input: "<< pt <<endl;
     }
     cout <<endl;
 
     for(int i = 0; i < rotatedbias.size(); i++){
-        auto pt = cryptoContext->MakePackedPlaintext(rotatedbias[i]);
+        auto pt = cryptoContext->MakeCKKSPackedPlaintext(rotatedbias[i]);
         plaintextbias.push_back(pt);
         // cout << "plain text of bias: "<< pt <<endl;
     }
     cout <<endl;
 
-    // The encryption process
+    // Encrypt the encoded vectors
     std::cout << "Encrypting #input ........ "<< std::endl;
     vector<Ciphertext<DCRTPoly>> cipherinput;
     for(int i = 0; i < plaintextinput.size(); i++){
         auto ciphertext1 = cryptoContext->Encrypt(keyPair.publicKey, plaintextinput[i]);
         cipherinput.push_back(ciphertext1);
     }
-    
-    // Homomorphic multiplications
-    TIC(t);
 
-    //first half 
+    // Homomorphic addition
+    TIC(t);
 
     Ciphertext<DCRTPoly> cipherMult;
     // cout <<"starting first rot and accum"<<endl;
@@ -261,20 +243,11 @@ int main(int argc, char* argv[]) {
         shift /= 2;
     }
     cipherMult = cryptoContext->EvalAdd(cipherMult, plaintextbias[0]);
-    // for(int i = 10; i <512; i*=2){
-    //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
-    //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
-    // }
-    // int chunkSize = 10;
-    // int chunks    = 512 / chunkSize; // 51
-    // for(int step = 1; step < chunks; step *= 2){
-    //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
-    //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
-    // }
+
     processingTime = TOC(t);
     std::cout << "layer time calculation: " << processingTime << "ms" << std::endl;
     
-    // Decrypt the result of multiplications
+    // Decrypt the result of addition
     vector<Plaintext> plaintextMultResult;
 
     for (int i = 0; i < WidthB; i++) {
@@ -286,7 +259,5 @@ int main(int argc, char* argv[]) {
         std::cout << "layer: " << pt << std::endl;
     }
 
-    // cout << "\nReal Answer B:\n";
-    // printMatrix(Real_Answer);
     return 0;
 }
