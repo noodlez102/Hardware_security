@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <bits/stdc++.h>
 
 #include "openfhe.h"
 
@@ -133,17 +134,19 @@ int main(int argc, char* argv[]) {
     cryptoContext->EvalMultKeyGen(keyPair.secretKey);
     //need this to use evalrot
     vector<int32_t> rotations;
-    for (int j = -512; j <= 512; j++) {
+
+    int num_shifts = int(log2(512) - log2(10));
+    int shift = m / 2;
+    for (int i = 0; i < num_shifts; ++i) {
+        rotations.push_back(shift);
+        shift /= 2;
+    }
+
+    for (int j = 10; j <= 512; j*=2) {
         rotations.push_back(j);
     }
     for (int j = -10; j <= 10; j++) {
         rotations.push_back(j);
-    }
-
-    int shift = 512 / 2;
-    while (shift >= 10) {
-        rotations.push_back(shift);
-        shift /= 2;
     }
 
     cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
@@ -223,42 +226,17 @@ int main(int argc, char* argv[]) {
     TIC(t);
 
     //first half 
+
     Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
 
     for(int j = 1; j < 10; j++){ 
-        auto left  = cryptoContext->EvalRotate(cipherinput[0], j);
-        auto right = cryptoContext->EvalRotate(cipherinput[0], j - 512); // better wrap
+        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
+        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
+        auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
-        auto rotated = cryptoContext->EvalAdd(left, right);
-
-        auto mult = cryptoContext->EvalMult(rotated, plaintextweight[j]);
-        cipherMult = cryptoContext->EvalAdd(cipherMult, mult);
+        auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
+        cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
     }
-
-    // hybrid reduction (FIXED)
-    shift = 512 / 2;
-    while (shift >= 10) {
-        auto rot = cryptoContext->EvalRotate(cipherMult, shift);
-        cipherMult = cryptoContext->EvalAdd(cipherMult, rot);
-        shift /= 2;
-    }
-
-    // mask
-    vector<int64_t> mask(512, 0);
-    for (int i = 0; i < 10; i++) mask[i] = 1;
-
-    auto ptMask = cryptoContext->MakePackedPlaintext(mask);
-    cipherMult = cryptoContext->EvalMult(cipherMult, ptMask);
-    // Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
-
-    // for(int j = 1; j < 10; j++){ 
-    //     auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
-    //     auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 10);
-    //     auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
-
-    //     auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
-    //     cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
-    // }
     //next half needs to rotate and accumulate into a 10x1
     // for(int i = 10; i <512; i*=2){
     //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
@@ -270,6 +248,16 @@ int main(int argc, char* argv[]) {
     //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
     //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
     // }
+
+    num_shifts = int(log2(512) - log2(10));
+    shift = m / 2;
+    for (int i = 0; i < num_shifts; ++i) {
+        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherMult, shift);
+        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherMult, shift - num_shifts);
+        auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
+        cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextrotFinal);
+        shift /= 2;
+    }
 
 
     processingTime = TOC(t);
