@@ -22,15 +22,15 @@ using namespace std;
 #define InputsPath "../question_3/inputs.txt"
 #define BiasPath "../question_3/bias.txt"
 
-vector<vector<int64_t>> loadFromFile(const string& path) {
-    vector<vector<int64_t>> matrix;
+vector<vector<double>> loadFromFile(const string& path) {
+    vector<vector<double>> matrix;
     ifstream file(path);
 
     string line;
     while (getline(file, line)) {
-        vector<int64_t> row;
+        vector<double> row;
         istringstream ss(line);
-        int64_t val;
+        double val;
         while (ss >> val)
             row.push_back(val);
         if (!row.empty())
@@ -40,8 +40,8 @@ vector<vector<int64_t>> loadFromFile(const string& path) {
     return matrix;
 }
 
-vector<vector<int64_t>> generateMatrix(int height, int width) {
-    vector<vector<int64_t>> mat(height, vector<int64_t>(width));
+vector<vector<double>> generateMatrix(int height, int width) {
+    vector<vector<double>> mat(height, vector<double>(width));
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -52,11 +52,11 @@ vector<vector<int64_t>> generateMatrix(int height, int width) {
     return mat;
 }
 
-vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
+vector<vector<double>> getDiagonals(const vector<vector<double>>& matrix) {
     int height = matrix.size();
     int width = matrix[0].size();
 
-    vector<vector<int64_t>> mat(height, vector<int64_t>(width));
+    vector<vector<double>> mat(height, vector<double>(width));
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -67,11 +67,11 @@ vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
     return mat;
 }
 
-vector<vector<int64_t>> rotateMatrix(const vector<vector<int64_t>>& matrix) {
+vector<vector<double>> rotateMatrix(const vector<vector<double>>& matrix) {
     int height = matrix.size();
     int width = matrix[0].size();
 
-    vector<vector<int64_t>> mat(width, vector<int64_t>(height));
+    vector<vector<double>> mat(width, vector<double>(height));
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -82,7 +82,7 @@ vector<vector<int64_t>> rotateMatrix(const vector<vector<int64_t>>& matrix) {
     return mat;
 }
 
-void printMatrix(const vector<vector<int64_t>>& mat) {
+void printMatrix(const vector<vector<double>>& mat) {
     for (const auto& row : mat) {
         for (const auto& val : row) {
             cout << val << " ";
@@ -91,12 +91,12 @@ void printMatrix(const vector<vector<int64_t>>& mat) {
     }
 }
 
-vector<vector<int64_t>> multiplyMatrix(const vector<vector<int64_t>>& A,const vector<vector<int64_t>>& B) {
+vector<vector<double>> multiplyMatrix(const vector<vector<double>>& A,const vector<vector<double>>& B) {
     int H = A.size();         
     int W = A[0].size();      
     int K = B[0].size();      
 
-    vector<vector<int64_t>> C(H, vector<int64_t>(K, 0));
+    vector<vector<double>> C(H, vector<double>(K, 0));
 
     for (int i = 0; i < H; i++) {
         for (int j = 0; j < K; j++) {
@@ -167,17 +167,17 @@ int main(int argc, char* argv[]) {
               << std::endl;
 
     // Parse inputs as doubles (CKKS works on floating-point)
-    vector<vector<int64_t>> weight = loadFromFile(WeightPath);
+    vector<vector<double>> weight = loadFromFile(WeightPath);
     for (int i = 0; i < 6; ++i) {
-        weight.push_back(vector<int64_t>(512, 0));
+        weight.push_back(vector<double>(512, 0));
     }
 
-    vector<vector<int64_t>> hybridweight = getDiagonals(weight);
+    vector<vector<double>> hybridweight = getDiagonals(weight);
 
-    vector<vector<int64_t>> input = loadFromFile(InputsPath);
+    vector<vector<double>> input = loadFromFile(InputsPath);
 
-    vector<vector<int64_t>> bias = loadFromFile(BiasPath);
-    vector<vector<int64_t>> rotatedbias  = rotateMatrix(bias);
+    vector<vector<double>> bias = loadFromFile(BiasPath);
+    vector<vector<double>> rotatedbias  = rotateMatrix(bias);
 
     vector<Plaintext> plaintextweight;
     vector<Plaintext> plaintextinput;
@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
     // Decrypt the result of addition
     vector<Plaintext> plaintextMultResult;
 
-    for (int i = 0; i < WidthB; i++) {
+    for (int i = 0; i < 1; i++) {
         Plaintext pt;
         cryptoContext->Decrypt(keyPair.secretKey, cipherMult, &pt);
 
