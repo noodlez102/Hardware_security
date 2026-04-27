@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
         shift /= 2;
     }
 
-    cipherMult = cryptoContext->EvalAdd(cipherMult, plainmask);
+    cipherMult = cryptoContext->EvalMult(cipherMult, plainmask);
 
     // for(int i = 10; i <512; i*=2){
     //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
