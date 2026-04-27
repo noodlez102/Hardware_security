@@ -142,8 +142,10 @@ int main(int argc, char* argv[]) {
         // rotations.push_back(shift - num_shifts);
         shift /= 2;
     }
-    for (int j = -16; j <= 16; j++) {
+    for (int j = 0; j <= 16; j++) {
         rotations.push_back(j);
+        rotations.push_back(j-512);
+
     }
 
     cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
@@ -170,14 +172,14 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < 6; ++i) {
         weight.push_back(vector<int64_t>(512, 0));
     }
-    vector<vector<int64_t>> test = {{1, 2, 3, 4}, {5, 6, 7, 8}};
-    cout<<"matrix of test: "<<endl;
-    printMatrix(test);
-    cout<<endl;
-    vector<vector<int64_t>> test_diagonal = getDiagonals(test);
-    cout<<"matrix of test_diagonal: "<<endl;
-    printMatrix(test_diagonal);
-    cout<<endl;
+    // vector<vector<int64_t>> test = {{1, 2, 3, 4}, {5, 6, 7, 8}};
+    // cout<<"matrix of test: "<<endl;
+    // printMatrix(test);
+    // cout<<endl;
+    // vector<vector<int64_t>> test_diagonal = getDiagonals(test);
+    // cout<<"matrix of test_diagonal: "<<endl;
+    // printMatrix(test_diagonal);
+    // cout<<endl;
     vector<vector<int64_t>> hybridweight = getDiagonals(weight);
 
     vector<vector<int64_t>> input = loadFromFile(InputsPath);
@@ -238,11 +240,11 @@ int main(int argc, char* argv[]) {
     cout <<"starting first rot and accum"<<endl;
     for(int j = 0; j < 16; j++){ 
         auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
-        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 16);
+        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 512);
         auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
         auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
-        if(j=0){
+        if(j==0){
             cipherMult = ciphertextMultResult;
         }else{
             cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
@@ -259,7 +261,7 @@ int main(int argc, char* argv[]) {
         cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMulleft);
         shift /= 2;
     }
-
+    cipherMult = cryptoContext->EvalAdd(cipherMult, plaintextbias);
     // for(int i = 10; i <512; i*=2){
     //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
     //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
