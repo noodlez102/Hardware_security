@@ -10,7 +10,6 @@
 #include <vector>
 #include <string>
 #include <random>
-#include <bits/stdc++.h>
 
 #include "openfhe.h"
 
@@ -22,27 +21,6 @@ using namespace std;
 #define HeightB 3
 #define WidthB 1
 
-#define WeightPath "../question_3/weights.txt"
-#define InputsPath "../question_3/inputs.txt"
-#define BiasPath "../question_3/bias.txt"
-
-vector<vector<int64_t>> loadFromFile(const string& path) {
-    vector<vector<int64_t>> matrix;
-    ifstream file(path);
-
-    string line;
-    while (getline(file, line)) {
-        vector<int64_t> row;
-        istringstream ss(line);
-        int64_t val;
-        while (ss >> val)
-            row.push_back(val);
-        if (!row.empty())
-            matrix.push_back(row);
-    }
-
-    return matrix;
-}
 
 vector<vector<int64_t>> generateMatrix(int height, int width) {
     vector<vector<int64_t>> mat(height, vector<int64_t>(width));
@@ -64,7 +42,7 @@ vector<vector<int64_t>> getDiagonals(const vector<vector<int64_t>>& matrix) {
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            mat[i][j] = matrix[j % height][(j + i) % width];
+            mat[i][j] = matrix[j][(j + i) % width];
         }
     }
 
@@ -112,7 +90,6 @@ vector<vector<int64_t>> multiplyMatrix(const vector<vector<int64_t>>& A,const ve
 
     return C;
 }
-
 int main(int argc, char* argv[]) {
 	// if (argc != 4) {
     //     std::cerr << "Usage: " << argv[0] << " <matrix> <vector> " << std::endl;
@@ -134,22 +111,9 @@ int main(int argc, char* argv[]) {
     cryptoContext->EvalMultKeyGen(keyPair.secretKey);
     //need this to use evalrot
     vector<int32_t> rotations;
-
-    int num_shifts = int(log2(512) - log2(16));
-    int shift = 512 / 2;
-    for (int i = 0; i < num_shifts; ++i) {
-        rotations.push_back(shift);
-        // rotations.push_back(shift - num_shifts);
-        shift /= 2;
-    }
-
-    for (int j = 10; j <= 512; j*=2) {
+    for (int j = -HeightB; j <= HeightB; j++) {
         rotations.push_back(j);
     }
-    for (int j = -512; j <= 512; j++) {
-        rotations.push_back(j);
-    }
-
     cryptoContext->EvalRotateKeyGen(keyPair.secretKey, rotations);
 
     cout << endl;
@@ -171,9 +135,6 @@ int main(int argc, char* argv[]) {
     // vector<int64_t> mat_vals = parsemat(argv[1]);
     // vector<int64_t> vec_vals = parsemat(argv[2]);
     vector<vector<int64_t>> weight = loadFromFile(WeightPath);
-    for (int i = 0; i < 6; ++i) {
-        weight.push_back(vector<int64_t>(512, 0));
-    }
     vector<vector<int64_t>> test = {{1, 2, 3, 4}, {5, 6, 7, 8}};
     cout<<"matrix of test: "<<endl;
     printMatrix(test);
@@ -225,7 +186,12 @@ int main(int argc, char* argv[]) {
     }
     cout <<endl;
 
-    // The encryption process
+    vector<int64_t> mask(512, 0);
+    for (int i = 0; i < 10; ++i) {
+        mask[i] = 1;
+    }
+    Plaintext plainmask = cryptoContext->MakePackedPlaintext(mask);
+
     std::cout << "Encrypting #input ........ "<< std::endl;
     vector<Ciphertext<DCRTPoly>> cipherinput;
     for(int i = 0; i < plaintextinput.size(); i++){
@@ -233,43 +199,30 @@ int main(int argc, char* argv[]) {
         cipherinput.push_back(ciphertext1);
     }
     
+    
     // Homomorphic multiplications
+    vector<Ciphertext<DCRTPoly>> cipherMult;
     TIC(t);
+    for(int i = 0; i < WidthB; i++){
+        Ciphertext<DCRTPoly> total;
+        bool first = true;
+        for(int j = 0; j < HeightB; j--){ //make sure to fix rotation logic since it doesn't wrap around
+            auto ciphertextMulleft      = cryptoContext->EvalRotate(ciphervector[i], j);
+            auto ciphertextMulrot      = cryptoContext->EvalRotate(ciphervector[i], j - HeightB);
+            auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
 
-    //first half 
-
-    Ciphertext<DCRTPoly> cipherMult = cryptoContext->EvalMult(cipherinput[0], plaintextweight[0]);
-    cout <<"starting first rot and accum"<<endl;
-    for(int j = 1; j < 16; j++){ 
-        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherinput[0], j);
-        auto ciphertextMulrot      = cryptoContext->EvalRotate(cipherinput[0], j - 16);
-        auto ciphertextrotFinal = cryptoContext->EvalAdd(ciphertextMulleft, ciphertextMulrot);
-
-        auto ciphertextMultResult = cryptoContext->EvalMult(ciphertextrotFinal, plaintextweight[j]);
-        cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
-    }
-    //next half needs to rotate and accumulate into a 10x1
-
-    cout <<"starting 2nd rot and accum"<<endl;
-
-    num_shifts = int(log2(512) - log2(16));
-    shift = 512 / 2;
-    for (int i = 0; i < num_shifts; i++) {
-        auto ciphertextMulleft      = cryptoContext->EvalRotate(cipherMult, shift);
-        cipherMult = cryptoContext->EvalAdd(cipherMult, ciphertextMulleft);
-        shift /= 2;
+            auto ciphertextMultResult = cryptoContext->EvalMult(cipherMatrix[j], ciphertextrotFinal);
+            //cipherMult.push_back(ciphertextMultResult);
+            if (first) {
+                total = ciphertextMultResult;
+                first = false;
+            } else {
+                total = cryptoContext->EvalAdd(total, ciphertextMultResult);
+            }
+        }
+        cipherMult.push_back(total);
     }
 
-    // for(int i = 10; i <512; i*=2){
-    //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
-    //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
-    // }
-    // int chunkSize = 10;
-    // int chunks    = 512 / chunkSize; // 51
-    // for(int step = 1; step < chunks; step *= 2){
-    //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
-    //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
-    // }
     processingTime = TOC(t);
     std::cout << "Multiplicaton time matrix * Vector: " << processingTime << "ms" << std::endl;
     
@@ -278,10 +231,10 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < WidthB; i++) {
         Plaintext pt;
-        cryptoContext->Decrypt(keyPair.secretKey, cipherMult, &pt);
+        cryptoContext->Decrypt(keyPair.secretKey, cipherMult[i], &pt);
 
         plaintextMultResult.push_back(pt);
-        pt->SetLength(20);
+        pt->SetLength(HeightB);
         std::cout << "Row: " << pt << std::endl;
     }
 
