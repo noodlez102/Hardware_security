@@ -222,6 +222,12 @@ int main(int argc, char* argv[]) {
     }
     cout <<endl;
 
+    vector<int64_t> mask(512, 0);
+    for (int i = 0; i < 10; ++i) {
+        mask[i] = 1;
+    }
+    Plaintext plainmask = cryptoContext->MakePackedPlaintext(mask);
+
     // The encryption process
     std::cout << "Encrypting #input ........ "<< std::endl;
     vector<Ciphertext<DCRTPoly>> cipherinput;
@@ -246,16 +252,7 @@ int main(int argc, char* argv[]) {
         cipherMult=cryptoContext->EvalAdd(cipherMult, ciphertextMultResult);
     }
     //next half needs to rotate and accumulate into a 10x1
-    // for(int i = 10; i <512; i*=2){
-    //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
-    //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
-    // }
-    // int chunkSize = 10;
-    // int chunks    = 512 / chunkSize; // 51
-    // for(int step = 1; step < chunks; step *= 2){
-    //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
-    //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
-    // }
+
     cout <<"starting 2nd rot and accum"<<endl;
 
     num_shifts = int(log2(512) - log2(10));
@@ -266,7 +263,18 @@ int main(int argc, char* argv[]) {
         shift /= 2;
     }
 
+    cipherMult = cryptoContext->EvalAdd(cipherMult, plainmask);
 
+    // for(int i = 10; i <512; i*=2){
+    //     auto cipherrotchunk = cryptoContext->EvalRotate(cipherMult, i);
+    //     cipherMult= cryptoContext->EvalAdd(cipherMult,cipherrotchunk);
+    // }
+    // int chunkSize = 10;
+    // int chunks    = 512 / chunkSize; // 51
+    // for(int step = 1; step < chunks; step *= 2){
+    //     Ciphertext<DCRTPoly> cipherrotchunk = cryptoContext->EvalRotate(cipherMult, step * chunkSize);
+    //     cipherMult = cryptoContext->EvalAdd(cipherMult, cipherrotchunk);
+    // }
     processingTime = TOC(t);
     std::cout << "Multiplicaton time matrix * Vector: " << processingTime << "ms" << std::endl;
     
